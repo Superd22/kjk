@@ -272,6 +272,8 @@ fn solo_options(stage: &'static str) -> Result<play::Options<'static>, String> {
         xp: None,
         items: &[],
         talk: None,
+        dialog: None,
+        at: None,
         party: &[],
         save: None,
         inexact: None,
