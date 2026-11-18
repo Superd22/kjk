@@ -848,6 +848,7 @@ impl Rising {
 type PartPlays = (Anim, sim::skeleton::Played);
 
 /// One character's animation state, carried from frame to frame.
+#[derive(Clone)]
 pub struct Figure {
     g2: G2<'static>,
     bones: Bones,
@@ -1686,6 +1687,7 @@ impl Figure {
 /// each it is, as of when (sim ms); its nodes' parents and rest
 /// (`rest_of`); how it leans with the floor, if it does (`ground_lean`);
 /// whether it is a creature model (`CreatureClips::creature`).
+#[derive(Clone)]
 struct Clips {
     clips: [Option<Animator>; 6],
     creature: bool,
@@ -1719,6 +1721,7 @@ const READY_AT: usize = 6;
 const RIFLE_AT: usize = READY_AT + 100;
 
 /// How a body is posed.
+#[derive(Clone)]
 enum Look {
     /// JA's animations retargeted onto a KOTOR body; by weapon slot, the
     /// rig that grips the slot's blade while it is out.
@@ -1758,6 +1761,7 @@ impl Look {
 
 /// A character's body in the scene: its model's root and node entities,
 /// how it is posed, and the ragdoll it falls as (`ragdolls`).
+#[derive(Clone)]
 struct Body {
     root: Entity,
     nodes: Vec<Entity>,
@@ -1803,6 +1807,7 @@ pub struct DrawnBody<'a> {
 
 /// A drawn character: its body and its animation state (its weapons are
 /// in `Holdings`); while it is drawn in a disguise's body, its own, hidden.
+#[derive(Clone)]
 struct Member {
     body: Body,
     figure: Figure,
@@ -3401,6 +3406,7 @@ impl Cast {
         });
         match pool.filter(|_| apart) {
             Some(pool) => {
+                let serial = pose_check::serial(&moving, &stage, transforms);
                 let (world, owners) = (&*transforms, &self.owners);
                 // The thread that waits on the scope poses too.
                 let per_task = full.div_ceil(pool.thread_num() + 1);
@@ -3431,6 +3437,7 @@ impl Cast {
                         rest = tail;
                     }
                 });
+                pose_check::compare(&moving, serial, transforms);
             }
             None => {
                 for placing in &mut moving {
@@ -3509,6 +3516,120 @@ impl Cast {
         self.pose_ms = started.elapsed().as_secs_f64() * 1000.0;
         self.totals.add(self.posed, self.pose_ms);
         mine
+    }
+}
+
+/// TEMPORARY: compares every node of parallel posing with serial posing
+/// (`KJK_POSE_CHECK`).
+mod pose_check {
+    use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering::Relaxed};
+
+    static FRAMES: AtomicU64 = AtomicU64::new(0);
+    static PLACINGS: AtomicU64 = AtomicU64::new(0);
+    static NODES: AtomicU64 = AtomicU64::new(0);
+    static DIFFER: AtomicU64 = AtomicU64::new(0);
+    static DIFFER_POSED: AtomicU64 = AtomicU64::new(0);
+    static SERIAL_POSED: std::sync::Mutex<Vec<Option<Posed>>> = std::sync::Mutex::new(Vec::new());
+
+    fn nodes<'a>(moving: &'a [&mut Placing]) -> impl Iterator<Item = Entity> + 'a {
+        moving
+            .iter()
+            .flat_map(|p| p.member.body.owned.iter().copied())
+    }
+
+    fn bits(t: Option<Transform>) -> Option<[u32; 10]> {
+        t.map(|t| {
+            let [a, b, c] = t.translation.to_array();
+            let [d, e, f, g] = t.rotation.to_array();
+            let [h, i, j] = t.scale.to_array();
+            [a, b, c, d, e, f, g, h, i, j].map(f32::to_bits)
+        })
+    }
+
+    pub(super) fn serial(
+        moving: &[&mut Placing],
+        stage: &Stage,
+        transforms: &mut Query<&mut Transform>,
+    ) -> Option<Vec<Option<Transform>>> {
+        std::env::var_os("KJK_POSE_CHECK")?;
+        let before: Vec<_> = nodes(moving)
+            .map(|e| transforms.get(e).ok().copied())
+            .collect();
+        let mut members: Vec<Member> = moving.iter().map(|p| p.member.clone()).collect();
+        let mut posed = Vec::new();
+        for (p, member) in moving.iter().zip(&mut members) {
+            let mut copy = Placing {
+                id: p.id,
+                member,
+                at: p.at,
+                blasted: p.blasted,
+                ms: p.ms,
+                still: p.still,
+                falls: p.falls,
+                armed: p.armed,
+                drawn: p.drawn,
+                full: p.full,
+                reach: p.reach,
+                look: p.look,
+                talking: p.talking,
+                posed: None,
+            };
+            copy.place(stage, transforms);
+            posed.push(copy.posed);
+        }
+        *SERIAL_POSED.lock().unwrap() = posed;
+        let after = nodes(moving)
+            .map(|e| transforms.get(e).ok().copied())
+            .collect();
+        for (e, was) in nodes(moving).zip(before) {
+            if let (Some(was), Ok(mut now)) = (was, transforms.get_mut(e)) {
+                *now = was;
+            }
+        }
+        Some(after)
+    }
+
+    pub(super) fn compare(
+        moving: &[&mut Placing],
+        serial: Option<Vec<Option<Transform>>>,
+        transforms: &Query<&mut Transform>,
+    ) {
+        let Some(serial) = serial else {
+            return;
+        };
+        let (mut n, mut differ) = (0, 0);
+        for (e, s) in nodes(moving).zip(serial) {
+            n += 1;
+            if bits(transforms.get(e).ok().copied()) != bits(s) {
+                differ += 1;
+            }
+        }
+        let serial_posed = std::mem::take(&mut *SERIAL_POSED.lock().unwrap());
+        let posed_differ = moving
+            .iter()
+            .zip(&serial_posed)
+            .filter(|(p, s)| format!("{:?}", p.posed) != format!("{s:?}"))
+            .count() as u64;
+        let frames = FRAMES.fetch_add(1, Relaxed) + 1;
+        PLACINGS.fetch_add(moving.len() as u64, Relaxed);
+        NODES.fetch_add(n, Relaxed);
+        DIFFER.fetch_add(differ, Relaxed);
+        DIFFER_POSED.fetch_add(posed_differ, Relaxed);
+        if frames % 20 == 0 {
+            let line = format!(
+                "pose check: frames {frames} placings {} nodes {} differ {} posed differ {} refused {} refused live {}",
+                PLACINGS.load(Relaxed),
+                NODES.load(Relaxed),
+                DIFFER.load(Relaxed),
+                DIFFER_POSED.load(Relaxed),
+                crate::transforms::REFUSED.load(Relaxed),
+                crate::transforms::REFUSED_LIVE.load(Relaxed),
+            );
+            if let Some(path) = std::env::var_os("KJK_POSE_CHECK") {
+                let _ = std::fs::write(path, line);
+            }
+        }
     }
 }
 
@@ -4046,6 +4167,7 @@ const HEAD_TURN_BONE: &str = "hturn_g";
 /// body model's root down (across the head model hung on it), with the
 /// turn each takes in the model's space at rest: the head's (`rest`) and
 /// the chest's it hangs from (`chest`, the last of `above` from the body).
+#[derive(Clone)]
 struct HeadBone {
     node: Entity,
     above: Vec<Entity>,
@@ -4060,6 +4182,7 @@ struct HeadBone {
 /// from the model's root down, with their turn in the model's space at
 /// rest; and the top joint's children off the head's way (the collars),
 /// each with its own children (the upper arms).
+#[derive(Clone)]
 struct Spine {
     joints: Vec<Joint>,
     base: Vec<Entity>,
@@ -4068,6 +4191,7 @@ struct Spine {
 }
 
 /// A spine joint: its node and its turn in its parent's space at rest.
+#[derive(Clone)]
 struct Joint {
     node: Entity,
     rest: Quat,
@@ -4211,6 +4335,7 @@ impl Spine {
 /// is put back as it stood (`Head::turn`) before it is set again, or each
 /// frame's setting would build on the last: the frames, not the time, ran
 /// it up (issue 238, a shoulder drawn metres out at a high frame rate).
+#[derive(Clone)]
 struct Set {
     node: Entity,
     from: Transform,
@@ -4405,7 +4530,7 @@ impl HeadBone {
 /// (S7): how far from the body (degrees, to the left), as of when (sim
 /// ms), and its node's turn as last written and the turn it was written
 /// over.
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct Head {
     yaw: f32,
     ms: Option<f64>,

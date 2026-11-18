@@ -135,7 +135,7 @@ pub fn wield(weapon: Weapon, sheet: &Sheet, wields: &Wields) -> u8 {
 
 /// A body's breathing: its wield number (`wield`), and how much of it
 /// shows, as of when (sim ms).
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Breath {
     pub wield: u8,
     weight: f32,

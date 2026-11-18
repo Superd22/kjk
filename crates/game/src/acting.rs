@@ -919,7 +919,7 @@ impl Throw {
 /// What a body shows of scripts' animations: the one its character plays,
 /// and the one that played before, fading out; each with when (sim ms)
 /// it was broken off, if it was.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Shows {
     playing: Option<(Acting, Option<f64>)>,
     /// When (sim ms) the loop `playing` carries on began: the same looped

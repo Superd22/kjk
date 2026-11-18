@@ -106,6 +106,7 @@ fn wrap(angle: f32) -> f32 {
 
 /// A body's gait: its clips bound to its nodes, each one's weight and how
 /// far into it it is.
+#[derive(Clone)]
 pub struct Gait {
     clips: [Option<Animator>; 3],
     strides: [f32; 2],

@@ -38,6 +38,7 @@ pub(crate) fn hung(models: &[Placed], body: usize) -> impl Iterator<Item = usize
 /// A body's hung head: its animated nodes at rest, its body's clips bound
 /// on them, and the clips it plays where the body plays none of KOTOR's (a
 /// JA pose or a ragdoll has no face): standing, and dead (the lids shut).
+#[derive(Clone)]
 pub(crate) struct Face {
     rest: Vec<(Entity, Vec3, Quat)>,
     clips: Vec<Animator>,
