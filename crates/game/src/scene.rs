@@ -984,6 +984,8 @@ pub(crate) struct Stores<'a> {
     pub bindposes: &'a mut Assets<SkinnedMeshInverseBindposes>,
     /// Emitters' particle lists (`model_fx::Spray`).
     pub buffers: &'a mut Assets<ShaderBuffer>,
+    /// The danglymeshes' slots (`dangly::SWAY`).
+    pub sway: &'a mut crate::dangly::SwaySlots,
 }
 
 /// The asset stores as a system takes them.
@@ -994,6 +996,7 @@ pub(crate) struct ModelAssets<'w> {
     images: ResMut<'w, Assets<Image>>,
     bindposes: ResMut<'w, Assets<SkinnedMeshInverseBindposes>>,
     buffers: ResMut<'w, Assets<ShaderBuffer>>,
+    sway: ResMut<'w, crate::dangly::SwaySlots>,
 }
 
 impl ModelAssets<'_> {
@@ -1007,6 +1010,7 @@ impl ModelAssets<'_> {
                 materials: &mut self.materials,
                 bindposes: &mut self.bindposes,
                 buffers: &mut self.buffers,
+                sway: &mut self.sway,
             },
         )
     }
@@ -1263,10 +1267,10 @@ impl<'t> Spawner<'t> {
     ) -> Option<(Entity, AssetId<Mesh>, Handle<OdysseyMaterial>, bool)> {
         let tally = &mut self.tally;
         let textures = &self.textures;
-        // A skinned mesh stays in main memory too: a cut reads it
+        // A skinned mesh stays in main memory too. A cut reads it
         // (`severing`), and so do a body's marks (`body_marks`), a head's
-        // too; a danglymesh's vertices are rewritten each frame (`dangly`).
-        let usage = if part.skin.is_some() || placed.attach.is_some() || part.dangly.is_some() {
+        // too.
+        let usage = if part.skin.is_some() || placed.attach.is_some() {
             RenderAssetUsages::default()
         } else {
             RenderAssetUsages::RENDER_WORLD
@@ -1485,10 +1489,20 @@ impl<'t> Spawner<'t> {
                 culled = mesh.generate_skinned_mesh_bounds().is_ok();
             }
         }
-        if part.dangly.is_some() {
-            mesh = crate::dangly::with_previous(mesh);
-        }
+        // A danglymesh sways by its slots. A skinned danglymesh is left at
+        // rest, since the dangly shaders do not skin. None can be loaded.
+        // The model reader keeps a node only when its flag word is one of
+        // the games' twelve node types, and skin and danglymesh are two of
+        // them, never one node (`fmt_odyssey::mdl::NODE_TYPES`).
+        let mut slotted = part
+            .dangly
+            .as_ref()
+            .filter(|_| skinned.is_none())
+            .and_then(|_| crate::dangly::slot(&mut mesh, stores.sway));
         let mesh = stores.meshes.add(mesh);
+        if let Some(slotted) = &mut slotted {
+            stores.sway.hold(mesh.id(), slotted);
+        }
         let spawned = (mesh.id(), material.clone());
         let child = commands
             .spawn((Mesh3d(mesh), MeshMaterial3d(material), Transform::IDENTITY))
@@ -1516,9 +1530,11 @@ impl<'t> Spawner<'t> {
             commands.entity(child).insert(crate::light_probes::Unowned);
         }
         if let Some(dangly) = &part.dangly {
-            commands
-                .entity(child)
-                .insert(crate::dangly::Dangly::new(dangly));
+            if let Some(slotted) = slotted {
+                commands
+                    .entity(child)
+                    .insert(crate::dangly::Dangly::new(dangly, slotted));
+            }
             if skinned.is_none()
                 && let Some(bounds) = crate::fixed_bounds::dangly(part)
             {
@@ -2811,10 +2827,11 @@ impl Animator {
     pub(crate) fn pose(&self, at: f32, transforms: &mut impl Transforms) {
         for &(entity, rest_t, rest_r, track) in &self.bindings {
             let (translation, rotation) = self.local(at, (rest_t, rest_r, track));
-            if let Some(transform) = transforms.write(entity) {
-                transform.translation = translation;
-                transform.rotation = rotation;
-            }
+            transforms.set(entity, |now| Transform {
+                translation,
+                rotation,
+                ..*now
+            });
         }
     }
 
@@ -2891,10 +2908,11 @@ impl Animator {
     /// Puts the bound nodes back in their rest pose.
     pub(crate) fn rest(&self, transforms: &mut impl Transforms) {
         for &(entity, rest_t, rest_r, _) in &self.bindings {
-            if let Some(transform) = transforms.write(entity) {
-                transform.translation = rest_t;
-                transform.rotation = rest_r;
-            }
+            transforms.set(entity, |now| Transform {
+                translation: rest_t,
+                rotation: rest_r,
+                ..*now
+            });
         }
     }
 }
