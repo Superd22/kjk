@@ -83,10 +83,6 @@ pub(crate) struct Owned<'q, 'w, 's, 'd> {
     owner: u32,
 }
 
-/// TEMPORARY: accesses refused to a character (`KJK_POSE_CHECK`).
-pub(crate) static REFUSED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-pub(crate) static REFUSED_LIVE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
 thread_local! {
     /// The owned nodes' transforms before posing (`Owned::pose`), kept so
     /// that posing allocates nothing once warm.
@@ -126,25 +122,6 @@ impl<'q, 'w, 's, 'd> Owned<'q, 'w, 's, 'd> {
 
     fn owns(&self, entity: Entity) -> bool {
         let owns = self.owners.owns(self.owner, entity);
-        if !owns {
-            REFUSED.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            if self.world.get(entity).is_ok() {
-                REFUSED_LIVE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                let held = self.owners.0.get(entity.index_u32() as usize).copied();
-                if let Some(path) = std::env::var_os("KJK_POSE_CHECK") {
-                    let mut path = std::path::PathBuf::from(path);
-                    path.set_extension("refused");
-                    let _ = std::fs::write(
-                        path,
-                        format!(
-                            "{entity:?} owner {} held {held:?}\n{}",
-                            self.owner,
-                            std::backtrace::Backtrace::force_capture()
-                        ),
-                    );
-                }
-            }
-        }
         debug_assert!(owns, "a character posed a node it does not own");
         owns
     }
