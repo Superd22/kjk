@@ -66,7 +66,8 @@ impl Owners {
         }
     }
 
-    fn owns(&self, owner: u32, entity: Entity) -> bool {
+    /// Whether `owner` holds `entity`.
+    pub(crate) fn owns(&self, owner: u32, entity: Entity) -> bool {
         self.0.get(entity.index_u32() as usize) == Some(&owner)
     }
 }

@@ -3384,15 +3384,22 @@ impl Cast {
         let full = moving.iter().filter(|p| p.full).count();
         let pool = ComputeTaskPool::try_get().filter(|_| full >= PARALLEL_FROM);
         let mut claimed = 0;
-        if pool.is_some() {
-            for (owner, placing) in (1..).zip(&moving) {
-                claimed = owner;
-                if !self.owners.claim(owner, &placing.member.body.owned) {
-                    break;
-                }
+        let mut apart = pool.is_some();
+        for (owner, placing) in (1..).zip(&moving) {
+            if !apart {
+                break;
             }
+            claimed = owner;
+            apart = self.owners.claim(owner, &placing.member.body.owned);
         }
-        match pool.filter(|_| claimed == moving.len() as u32) {
+        // The nodes a head's straightening set last frame are set back
+        // first. After a body change (a disguise put on or taken off),
+        // they can be another body's.
+        apart &= (1..).zip(&moving).all(|(owner, placing)| {
+            let set = &placing.member.figure.head.set;
+            set.iter().all(|set| self.owners.owns(owner, set.node))
+        });
+        match pool.filter(|_| apart) {
             Some(pool) => {
                 let (world, owners) = (&*transforms, &self.owners);
                 // The thread that waits on the scope poses too.
