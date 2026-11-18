@@ -196,6 +196,13 @@ pub type Local = (Quat, Vec3);
 
 type Mixed = (Local, Local, f32);
 
+thread_local! {
+    /// Each bone's state and blend while `G2::pose_into` works out a pose,
+    /// kept so that a pose allocates nothing once warm.
+    static POSE_SCRATCH: std::cell::Cell<(Vec<Option<BoneState>>, Vec<Option<Mixed>>)> =
+        std::cell::Cell::default();
+}
+
 /// Two frames of one animation mixed as Ghoul2 lerps them: the joint at
 /// `pivot` linearly (`joint`), rotation along the arc Ghoul2's lerped
 /// matrix follows (the shorter one), at an even pace. Ghoul2's own matrix lerp rushes through
@@ -650,10 +657,22 @@ impl<'a> Player<'a> {
     /// blend lasts); the others follow their parent's animation on their
     /// own frames; a bone with neither stays at the identity.
     pub fn pose(&self, now_ms: f32) -> Vec<Local> {
+        let mut pose = Vec::new();
+        self.pose_into(now_ms, &mut pose);
+        pose
+    }
+
+    /// `pose` written over `pose`, which keeps its room from one call to
+    /// the next.
+    pub fn pose_into(&self, now_ms: f32, pose: &mut Vec<Local>) {
         let count = self.gla.bones.len();
-        let mut pose = vec![(Quat::IDENTITY, Vec3::ZERO); count];
-        let mut states: Vec<Option<BoneState>> = vec![None; count];
-        let mut mixed: Vec<Option<Mixed>> = vec![None; count];
+        pose.clear();
+        pose.resize(count, (Quat::IDENTITY, Vec3::ZERO));
+        let (mut states, mut mixed) = POSE_SCRATCH.take();
+        states.clear();
+        states.resize(count, None);
+        mixed.clear();
+        mixed.resize(count, None);
         for &bone in &self.order {
             let inherited = self.parent(bone).and_then(|parent| states[parent]);
             let Some((state, local, mix)) = self.local(bone, now_ms, inherited) else {
@@ -663,8 +682,8 @@ impl<'a> Player<'a> {
             mixed[bone] = mix;
             pose[bone] = local;
         }
-        self.limbs_blended(&mut pose, &mixed);
-        pose
+        self.limbs_blended(pose, &mixed);
+        POSE_SCRATCH.set((states, mixed));
     }
 
     /// It must give the same angles as `bolt_angles` over `pose`.

@@ -88,7 +88,7 @@ use crate::holdings::Holdings;
 use crate::ragdolls::{self, Doll, Dying, Lengths, Ragdolls};
 use crate::scene::{Animator, SceneModel, game_to_bevy};
 use crate::stance;
-use crate::transforms::{Staged, Transforms};
+use crate::transforms::{Owned, Owners, Transforms};
 use crate::viewer::{CreatureClips, CreatureView, LoadedScene};
 use crate::weapons::{self, Armed, Hands, Hide, Owner, Props, Sabers, Stow, Wielded};
 
@@ -1642,16 +1642,23 @@ impl Figure {
 
     /// `pose`, the whole model turned to the legs' yaw only if `facing`.
     fn pose_facing(&self, ms: f64, facing: bool) -> Vec<Local> {
+        let mut pose = Vec::new();
+        self.pose_facing_into(ms, facing, &mut pose);
+        pose
+    }
+
+    /// `pose_facing` written over `pose`, which keeps its room.
+    fn pose_facing_into(&self, ms: f64, facing: bool, pose: &mut Vec<Local>) {
         let g2 = &self.g2;
         // Drawn before the get-up's blend begins (between steps), the body
         // shows where the blend starts, the lying pose: the get-up's own
         // first frame, unblended, would take the turn below as well.
         let from = self.rising.and_then(|rising| rising.legs_from_ms);
-        let mut pose = g2.pose(from.map_or(ms as f32, |from| from.max(ms as f32)));
+        g2.pose_into(from.map_or(ms as f32, |from| from.max(ms as f32)), pose);
         if let Some(turned) = &self.turned {
             for &(bone, angles) in &turned.bones {
                 if let Some(bone) = g2.bone(bone) {
-                    g2.turn(&mut pose, bone, angles);
+                    g2.turn(pose, bone, angles);
                 }
             }
             if let Some(root) = self.bones.root.filter(|_| facing) {
@@ -1668,7 +1675,6 @@ impl Figure {
                 pose[root] = (yaw * pose[root].0, yaw * pose[root].1);
             }
         }
-        pose
     }
 }
 
@@ -1755,6 +1761,9 @@ impl Look {
 struct Body {
     root: Entity,
     nodes: Vec<Entity>,
+    /// Every node its posing reads or writes: its root and nodes, and the
+    /// root and nodes of the head hung on it.
+    owned: Vec<Entity>,
     look: Look,
     doll: Option<Arc<Doll>>,
     /// Its `camerahook` node, its model's else the head's hung on it:
@@ -2065,6 +2074,9 @@ pub struct Cast {
     /// each (seconds), by its model: what keys its emitters and lights
     /// (`own_fx::BodyClips`).
     pub body_clips: BTreeMap<usize, Vec<(Arc<AnimationIr>, f32)>>,
+    /// Which character owns each node while the characters are posed side
+    /// by side (`draw`).
+    owners: Owners,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -2135,6 +2147,7 @@ impl Cast {
             unequipped: Vec::new(),
             talking: Vec::new(),
             body_clips: BTreeMap::new(),
+            owners: Owners::default(),
         }
     }
 
@@ -2736,6 +2749,14 @@ impl Cast {
                 root: (*head_root, hung_at),
             })
         });
+        let head_model = crate::face::hung_head(&scene.models, model)
+            .and_then(|head| models.get(head)?.as_ref());
+        let owned = std::iter::once(root)
+            .chain(nodes.iter().copied())
+            .chain(head_model.into_iter().flat_map(|(head_root, head_nodes)| {
+                std::iter::once(*head_root).chain(head_nodes.iter().copied())
+            }))
+            .collect();
         let head = head_bone((&placed.ir, &nodes), hung);
         if let Look::Retargeted { gait: bound, .. } = &mut look {
             *bound = gait.map(|clips| crate::gait::Gait::bound(placed, &clips, &nodes));
@@ -2767,6 +2788,7 @@ impl Cast {
         Some(Body {
             root,
             nodes,
+            owned,
             look,
             doll,
             camera: None,
@@ -3359,35 +3381,60 @@ impl Cast {
             holdings: &self.holdings,
         };
         let mut moving: Vec<&mut Placing> = placing.iter_mut().filter(|p| !p.still).collect();
-        let parallel = moving.iter().filter(|p| p.full).count() >= PARALLEL_FROM;
-        match ComputeTaskPool::try_get().filter(|_| parallel) {
-            Some(pool) => {
-                let world = &*transforms;
-                let size = moving.len().div_ceil(pool.thread_num() * 4).max(1);
-                let written = pool.scope(|scope| {
-                    for chunk in moving.chunks_mut(size) {
-                        let stage = &stage;
-                        scope.spawn(async move {
-                            (chunk.iter_mut())
-                                .map(|placing| {
-                                    let mut staged = Staged::new(world);
-                                    placing.place(stage, &mut staged);
-                                    staged.written()
-                                })
-                                .collect::<Vec<_>>()
-                        });
-                    }
-                });
-                for written in written.into_iter().flatten() {
-                    written.apply(transforms);
+        let full = moving.iter().filter(|p| p.full).count();
+        let pool = ComputeTaskPool::try_get().filter(|_| full >= PARALLEL_FROM);
+        let mut claimed = 0;
+        if pool.is_some() {
+            for (owner, placing) in (1..).zip(&moving) {
+                claimed = owner;
+                if !self.owners.claim(owner, &placing.member.body.owned) {
+                    break;
                 }
             }
+        }
+        match pool.filter(|_| claimed == moving.len() as u32) {
+            Some(pool) => {
+                let (world, owners) = (&*transforms, &self.owners);
+                // The thread that waits on the scope poses too.
+                let per_task = full.div_ceil(pool.thread_num() + 1);
+                pool.scope(|scope| {
+                    let mut rest = &mut moving[..];
+                    let mut first = 1;
+                    while !rest.is_empty() {
+                        let mut fulls = 0;
+                        let size = rest
+                            .iter()
+                            .position(|p| {
+                                fulls += usize::from(p.full);
+                                fulls == per_task
+                            })
+                            .map_or(rest.len(), |last| last + 1);
+                        let (chunk, tail) = std::mem::take(&mut rest).split_at_mut(size);
+                        let stage = &stage;
+                        scope.spawn(async move {
+                            for (owner, placing) in (first..).zip(chunk) {
+                                let nodes = std::mem::take(&mut placing.member.body.owned);
+                                Owned::pose((world, owners), (owner, &nodes), |owned| {
+                                    placing.place(stage, owned);
+                                });
+                                placing.member.body.owned = nodes;
+                            }
+                        });
+                        first += size as u32;
+                        rest = tail;
+                    }
+                });
+            }
             None => {
-                for placing in moving {
+                for placing in &mut moving {
                     placing.place(&stage, transforms);
                 }
             }
         }
+        for (owner, placing) in (1..=claimed).zip(&moving) {
+            self.owners.release(owner, &placing.member.body.owned);
+        }
+        drop(moving);
         let mut dying = Vec::new();
         for Placing {
             id,
@@ -3458,8 +3505,13 @@ impl Cast {
     }
 }
 
-/// With fewer, waking the threads and copying each character's transforms
-/// costs about as much time as it saves.
+thread_local! {
+    /// The JA pose a retargeted body is posed from (`place`), kept so that
+    /// posing allocates no new one once warm.
+    static JA_POSE: std::cell::Cell<Vec<Local>> = std::cell::Cell::default();
+}
+
+/// With fewer, waking the threads costs about as much time as it saves.
 const PARALLEL_FROM: usize = 8;
 
 /// Posing one character never reads what posing another writes, so the
@@ -5014,7 +5066,8 @@ fn place<T: Transforms>(
                 head(figure, transforms, level);
                 return None;
             }
-            let ja = figure.pose_facing(ms, shown.is_empty());
+            let mut ja = JA_POSE.take();
+            figure.pose_facing_into(ms, shown.is_empty(), &mut ja);
             // Under JA's rules the hand always turns with the hilt.
             let in_fist = if rules.duel() && !audit_off("fist") {
                 figure.duel_share(ms)
@@ -5080,6 +5133,7 @@ fn place<T: Transforms>(
                 transforms,
             );
             let heading = ja_head_heading(&figure.g2, &ja);
+            JA_POSE.set(ja);
             head(figure, transforms, Hold { heading, ..level });
             Some(posed)
         }
