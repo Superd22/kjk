@@ -196,11 +196,12 @@ pub type Local = (Quat, Vec3);
 
 type Mixed = (Local, Local, f32);
 
+type PoseScratch = (Vec<Option<BoneState>>, Vec<Option<Mixed>>);
+
 thread_local! {
     /// Each bone's state and blend while `G2::pose_into` works out a pose,
     /// kept so that a pose allocates nothing once warm.
-    static POSE_SCRATCH: std::cell::Cell<(Vec<Option<BoneState>>, Vec<Option<Mixed>>)> =
-        std::cell::Cell::default();
+    static POSE_SCRATCH: std::cell::Cell<PoseScratch> = std::cell::Cell::default();
 }
 
 /// Two frames of one animation mixed as Ghoul2 lerps them: the joint at

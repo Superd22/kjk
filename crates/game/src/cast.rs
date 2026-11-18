@@ -3383,19 +3383,18 @@ impl Cast {
         let mut moving: Vec<&mut Placing> = placing.iter_mut().filter(|p| !p.still).collect();
         let full = moving.iter().filter(|p| p.full).count();
         let pool = ComputeTaskPool::try_get().filter(|_| full >= PARALLEL_FROM);
-        let mut claimed = 0;
+        let first = self.owners.frame(moving.len());
         let mut apart = pool.is_some();
-        for (owner, placing) in (1..).zip(&moving) {
+        for (owner, placing) in (first..).zip(&moving) {
             if !apart {
                 break;
             }
-            claimed = owner;
             apart = self.owners.claim(owner, &placing.member.body.owned);
         }
         // The nodes a head's straightening set last frame are set back
         // first. After a body change (a disguise put on or taken off),
         // they can be another body's.
-        apart &= (1..).zip(&moving).all(|(owner, placing)| {
+        apart &= (first..).zip(&moving).all(|(owner, placing)| {
             let set = &placing.member.figure.head.set;
             set.iter().all(|set| self.owners.owns(owner, set.node))
         });
@@ -3406,7 +3405,7 @@ impl Cast {
                 let per_task = full.div_ceil(pool.thread_num() + 1);
                 pool.scope(|scope| {
                     let mut rest = &mut moving[..];
-                    let mut first = 1;
+                    let mut chunk_first = first;
                     while !rest.is_empty() {
                         let mut fulls = 0;
                         let size = rest
@@ -3419,15 +3418,17 @@ impl Cast {
                         let (chunk, tail) = std::mem::take(&mut rest).split_at_mut(size);
                         let stage = &stage;
                         scope.spawn(async move {
-                            for (owner, placing) in (first..).zip(chunk) {
+                            for (owner, placing) in (chunk_first..).zip(chunk) {
                                 let nodes = std::mem::take(&mut placing.member.body.owned);
-                                Owned::pose((world, owners), (owner, &nodes), |owned| {
-                                    placing.place(stage, owned);
-                                });
+                                let pose = |owned: &mut Owned| placing.place(stage, owned);
+                                // SAFETY: Each character has its own owner
+                                // number, and the scope holds the query and
+                                // the owners by shared reference only.
+                                unsafe { Owned::pose((world, owners), (owner, &nodes), pose) };
                                 placing.member.body.owned = nodes;
                             }
                         });
-                        first += size as u32;
+                        chunk_first += size as u32;
                         rest = tail;
                     }
                 });
@@ -3437,9 +3438,6 @@ impl Cast {
                     placing.place(&stage, transforms);
                 }
             }
-        }
-        for (owner, placing) in (1..=claimed).zip(&moving) {
-            self.owners.release(owner, &placing.member.body.owned);
         }
         drop(moving);
         let mut dying = Vec::new();
