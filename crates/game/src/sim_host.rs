@@ -1337,6 +1337,12 @@ impl Authority {
         }
     }
 
+    /// The games' scripts run so far, by script, once the world is home.
+    fn script_runs(&mut self) -> std::collections::BTreeMap<String, usize> {
+        self.settle();
+        self.world.script_report().runs.clone()
+    }
+
     /// The world home, if it was being stepped: each of its ticks
     /// recorded, in order, and the newest made the last. The rest is kept
     /// for `advance` (`landed`). The actions of the ticks the step thread
@@ -2721,6 +2727,11 @@ fn advance(
     authority.frames += 1;
     authority.idle_frames += u64::from(stepped == 0);
     authority.most = authority.most.max(stepped);
+    authority.solo.sample();
+    if !dump_due.0 {
+        authority.solo.note_players();
+        return;
+    }
     let (source, replay) = match &authority.source {
         Source::Live { .. } => ("live", None),
         Source::Replay { matched, .. } => ("replay", *matched),
@@ -2734,16 +2745,12 @@ fn advance(
             "hz": authority.setup.rate.hz(),
             "tick": last.tick,
             "time_ms": last.time_ms,
-            // Hashing encodes the whole state: only for a dump.
-            "hash": dump_due.0.then(|| last.hash().to_string()),
+            "hash": last.hash().to_string(),
             "entities": last.entities.len(),
             "module": last.place.as_ref().map(|place| place.module.clone()),
             "census": { "live": census.live, "left_behind": census.stashed },
-            // The games' scripts run so far, by script (for a dump).
-            "script_runs": dump_due.0.then(|| {
-                authority.settle();
-                authority.world.script_report().runs.clone()
-            }),
+            // The games' scripts run so far, by script.
+            "script_runs": authority.script_runs(),
             "frames": authority.frames,
             "frames_without_tick": authority.idle_frames,
             "most_ticks_in_a_frame": authority.most,
@@ -2755,7 +2762,6 @@ fn advance(
             "replay_matched": replay,
         }),
     );
-    authority.solo.sample();
     facts.0.insert("net".into(), authority.solo.facts());
 
     let first = authority
