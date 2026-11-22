@@ -68,7 +68,7 @@ const FEATURES = {
 };
 const FEATURE_ITEMS = [["nose", "Nose"], ["jaw", "Jaw and chin"], ["brow", "Brow and forehead"], ["cheeks", "Cheekbones and cheeks"], ["eyes", "Eyes"]];
 const ROUNDS = {
-  r1: { feature: "nose", label: "Round 1 sliders", page: "nose/page_r1.json", sliders: "nose/sliders_r1.json", made: "nose/made_r1", startsFile: "nose/starts.bin", solvedMode: "learned", modes: [["held_out", "Learned without this head"], ["learned", "Learned with this head"]] },
+  r1: { feature: "nose", label: "Round 1 sliders", page: "page.json", sliders: "nose/sliders_r1.json", made: "nose/made_r1", startsFile: "nose/starts.bin", solvedMode: "learned", modes: [["held_out", "Learned without this head"], ["learned", "Learned with this head"]] },
   r2: { feature: "nose", label: "Round 2 sliders", page: "nose/page_r2.json", sliders: "nose/sliders_r2.json", made: "nose/made_r2", startsFile: "nose/starts.bin", solvedMode: "full", modes: [["held_out", "Ranges set without this head"], ["full", "Ranges set from all heads"]] },
   jaw: { feature: "jaw", label: "Jaw and chin sliders", page: "jaw/page.json", sliders: "jaw/sliders.json", made: "jaw/made", startsFile: "jaw/starts.bin", solvedMode: "full", modes: [["held_out", "Ranges set without this head"], ["full", "Ranges set from all heads"]] },
   brow: { feature: "brow", label: "Brow and forehead sliders", page: "brow/page.json", sliders: "brow/sliders.json", made: "brow/made", startsFile: "brow/starts.bin", solvedMode: "full", modes: [["held_out", "Ranges set without this head"], ["full", "Ranges set from all heads"]] },

@@ -189,19 +189,28 @@ and `page.json` into the root of `web/`, next to the shared inputs
 
 That asymmetry was removed on 2026-11-22. The nose now writes into
 `web/nose/` like every other feature, because its `files()` override in
-`nose.rs` is gone and it takes the default `web/<key>/` paths. The root of
-`web/` holds only the seven shared inputs: `base.bin`, `triangles.bin`,
-`keep.bin`, `fold_hidden.bin`, `heads.json`, `layout.json` and
-`starts_all.bin`. The nose's KOTOR crops moved from `web/kotor/` to
-`web/kotor_nose/`, so every feature's crops are now `web/kotor_<key>/`,
-and its reports and marks moved out of the folder that holds `input/` into
-`sliders/nose/`.
+`nose.rs` is gone and it takes the default `web/<key>/` paths. The nose's
+KOTOR crops moved from `web/kotor/` to `web/kotor_nose/`, so every
+feature's crops are now `web/kotor_<key>/`, and its marks and its later
+reports moved into `sliders/nose/`.
 
-Round 1 of the nose was written by `nose_bench`, which was deleted on
-2026-11-22, so its data can never be made again. Those four files were kept
-and renamed `web/nose/sliders_r1.json`, `page_r1.json`, `made_r1.bin` and
-`made_r1.json`, so that the default paths cannot overwrite them. The nose
-page still offers them as "Round 1 sliders".
+**Two files at the roots look like the nose's and are not.** Both were
+written by `nose_bench` in round 1, and both became the shared source of
+things every feature reads, so they stay where they are. `web/page.json`
+holds the base frame, the base eyes and all 57 heads with their own eye
+frames. Viewer 2 reads it on every load, and the nose page reads it as its
+first line. `sliders/report.json` holds each head's frame, and
+`web_export.py` reads it for every feature, not only the nose. Moving them
+on 2026-11-22 took the nose out of viewer 2 until they were put back.
+`nose_bench` is deleted, so neither can be made again.
+
+The root of `web/` therefore holds eight files, and no feature writes
+there: `base.bin`, `triangles.bin`, `keep.bin`, `fold_hidden.bin`,
+`heads.json`, `layout.json`, `starts_all.bin` and `page.json`.
+
+Round 1's other files were kept and renamed `web/nose/sliders_r1.json`,
+`made_r1.bin` and `made_r1.json`, so that the default paths cannot
+overwrite them. The nose page still offers them as "Round 1 sliders".
 
 So any two features can now be worked on at the same time without
 colliding outside git.
@@ -250,6 +259,7 @@ This block is the current state of the face's shape work outside the eyes. The l
 - **The eye opening as a curve on the eyeball (A, eyes), live in viewer 2 since 2026-11-21 at about 22:00.** Eyes HQ said go after David approved. The opening is a curve on the eyeball set by ten handles, refitted on all 57 heads, and it is viewer 2's default (`EYE_CURVE_LIVE` in `hq/viewer2/sliders.js`; `?eyecurvelive=0` shows the old eyes for one page). The ten handles replace 23 opening sliders in the Eyes tab. The real lid piece and lash strip are built on the curve and close cleanly on every head. mod_hp_pfha01, mod_tcs_bastila and mod_narve_canderous take median handles, because KOTOR's outline of their eyes cannot be read. Still wrong: a thin pale line along the lower lid, a shadow under pmha04's brow, the closed lid's look, and the paint's lid lines about 1 mm off (they need a conversation for the eye paint). The slider page `/nose/` still shows the old eye sliders. Undo: set `EYE_CURVE_LIVE` to false and run `hq/viewer2/restage.sh`. The note is `/var/folders/sw/l_t3dnys0t7cwtp6ptyx279m0000gn/T/kjk-eye-golive-2026-11-21.md`.
 
 **Running now**
+- **The upper lid piece in 3D, thick and jutting forward (eyes, B3 and B5, decision 65), started on 2026-11-22 by the Face 3D Features HQ.** A conversation of its own builds the lid piece's thickness and its jut as a measured feature with a slider, and solves it on all 57 test heads. The reason is Bastila's heavy hooded lid, which we cannot reproduce: KOTOR's lid piece juts 8.6 mm in front of her eyeball and ours juts 1.9 mm. The gate on the step is the flap of skin at her outer corner, which the trial of 2026-11-21 produced when it set the piece's least edge thickness to 2.2 mm instead of 0.8 mm. The brief is `docs/research/head-briefs/brief-lid-thickness.md`, and the note will be `kjk-lid-thickness-2026-11-22.md`. The conversation works in its own worktree on its own port, so viewer 2 on port 8765 does not change until the result is folded in.
 - **The lips' shape, measured and solved (B3 and B5 for the mouth), started on the night of 2026-11-21 and done on 2026-11-22. It is not in viewer 2, because it is not clearly better.** A conversation of its own built a lip measure in the slider kit (`lips.rs`, `sliders lips`). It reads the profile down the middle and 10 mm to each side, and each half of the lips seen from the front, on KOTOR's own meshes. The profiles pass checks 1, 3 and 4. The middle profile wobbles 0.28 mm on the same head, against 1.07 mm between two KOTOR heads. Seven named lip sliders were built and solved on all 57 heads, with a guard that lets no outline get worse. The median gap to KOTOR fell from 0.58 to 0.41 mm on the middle profile, from 0.71 to 0.59 mm at 10 mm and from 2.46 to 1.52 mm on the front. Still wrong: the front border cannot be read on many of our smooth lips, which misled the solve on pfha05 (its upper lip grew where KOTOR's is thin). Our mouths are also 9 mm narrower than KOTOR's at the median, and the width slider cannot fix that, because the build's last smoothing spreads the corners' move along the lips. Cupid's bow was dropped for the same reason. Note: `$TMPDIR/kjk-lips-shape-2026-11-22.md`.
 - **The lips' shape, round 2 (B3 and B5 for the mouth), done on 2026-11-22. It is in viewer 2's default.** Viewer 2 has a seventh feature, "Lip shape", with 8 sliders and a preset for every head. The first pass's measure took the fold under the nose for the line between the lips on 21 of our heads (every female head among them) and on 6 of KOTOR's. The line is now searched near the lip paint's opening rows, and each lip's border is where the lip has fallen back half way from its crest, on KOTOR's meshes and ours alike. Mouth width and Cupid's bow are moves added after the build's smoothing (a new slider kind, "after"). The corners no longer tear, because the lining that the smoothing keeps still now moves with them. On all 57 heads the median gaps to KOTOR fell from 0.50 to 0.34 mm (middle profile), from 0.59 to 0.45 mm (10 mm to the side) and from 1.10 to 0.89 mm (front). No head got worse on any outline, and no solved head turns a triangle. Still wrong: Mouth width's ends (-3 and 6) turn 1 or 2 triangles on a few heads, sith_app's front gap is still 1.51 mm, and our Kyle Katarn's lips cannot be read. Note: `$TMPDIR/kjk-lips-round2-2026-11-22.md`.
 - **The jaw-to-neck and skull build folded into viewer 2 (B3 and B5 for the jaw, the chin and the skull; A2), live since 2026-11-22 at about 02:05 and waiting for David.** Viewer 2 builds the throat construction in the browser, within 0.00006 mm of the Rust build. Its default heads carry the solved jaw, throat and skull values on all 57 heads, with a new tab "Throat and skull" (4 throat and 4 skull sliders). No other feature moved past its mark, and no head turns a triangle at its presets. The haired heads' Forehead slope was solved against the bald reference, and 13 heads took a new value (`brow/page_fold.json`). Still broken: the throat sliders' pair corners turn 1 to 17 triangles on 48 heads (one repair loop failed, ranges unchanged), and pmhc04's forehead reaches only 21 of the reference's 30 degrees at the slider's end. The prototypes `jawproto`, `throatproto`, `skullrefit`, `chinneck` and `jawskull` and their code are deleted. Note: `$TMPDIR/kjk-jaw-skull-fold-2026-11-22.md`.
