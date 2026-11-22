@@ -28,6 +28,20 @@ data first.
   decision 53 say that anything that ships, and anything heavy to compute,
   is written in Rust. These scripts stay until they are ported.
 
+## The viewer's reference data
+
+`viewer-data/` holds the 829 MB of KOTOR meshes, textures, eye textures and
+bakes that viewer 2 draws, in 4,392 files. `.gitignore` excludes it,
+because it is game data and this branch is never merged, so a fresh clone
+does not get it.
+
+It lived in a conversation's scratch folder under `/private/tmp` until
+2026-11-22, which macOS empties when the machine restarts, and 26 files
+hardcode that path. A symlink at the old path points here, so they all keep
+working. `git clean -xdf` in this worktree would delete the folder.
+`scan/trials-2026-11-18/kotor_viewer_export.py` makes it again from the
+game installs, slowly.
+
 ## Working on two features at once
 
 `sliders/serve_feature.sh <feature> <worktree>` gives one conversation a
