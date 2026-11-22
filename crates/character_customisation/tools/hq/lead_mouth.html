@@ -1,0 +1,34 @@
+  <section aria-labelledby="viewer-title">
+    <h2 id="viewer-title">Compare a head</h2>
+    <p>Pick any of the 57 heads. The left view is the KOTOR head as the game draws it. The right view is our fitted head. The Paint menu chooses what it wears: KOTOR's paint, or one of our own procedural paints. The switch "Our shape on both sides" turns the left view into our head with KOTOR's paint, so the two views differ only in paint. Drag either view to turn both heads together, and scroll to zoom. Both heads play the chosen animation at the same time. Each head moves with its own skin weights. The left head uses the weights that its KOTOR model file stores.</p>
+    <div id="viewer" class="viewer" data-src="../viewer/data/">
+      <div class="v-controls">
+        <label>Head <select id="v-head"></select></label>
+        <span class="v-group" role="group" aria-label="View">
+          <button type="button" data-view="front">Front</button>
+          <button type="button" data-view="three">Three quarters</button>
+          <button type="button" data-view="side">Side</button>
+        </span>
+        <span class="v-group" role="group" aria-label="Framing">
+          <button type="button" data-frame="mouth" aria-pressed="true">Mouth</button>
+          <button type="button" data-frame="head" aria-pressed="false">Whole head</button>
+        </span>
+        <label>Paint <select id="v-bake"><option value="new">KOTOR paint, new layout</option><option value="old">KOTOR paint, old layout</option></select></label>
+        <label class="v-check"><input type="checkbox" id="v-same"> Our shape on both sides</label>
+        <span id="v-paint-note" class="v-status"></span>
+        <label class="v-check"><input type="checkbox" id="v-shape"> Shape only, no paint</label>
+        <label class="v-check"><input type="checkbox" id="v-hair"> KOTOR hair on ours</label>
+        <span id="v-hair-note" class="v-status"></span>
+        <label>Animation <select id="v-anim"></select></label>
+        <button type="button" id="v-play" disabled>Play</button>
+      </div>
+      <div class="v-views">
+        <figure class="v-view"><canvas id="v-kotor" aria-label="The KOTOR head"></canvas><figcaption>KOTOR original</figcaption></figure>
+        <figure class="v-view"><canvas id="v-ours" aria-label="Our fitted head"></canvas><figcaption>Ours, FLAME fitted to it</figcaption></figure>
+      </div>
+      <p id="v-status" class="v-status" role="status"></p>
+    </div>
+  </section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script>document.write('<script src="../viewer/viewer.js?v=' + Date.now() + '"><\/script>')</script>

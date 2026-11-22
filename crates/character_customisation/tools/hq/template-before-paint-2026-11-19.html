@@ -1,0 +1,259 @@
+<title>Likeness HQ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column. The goal, then part A (global) as a board, then part B (zone by zone) as a grid of zones by steps with a chart of
+   KOTOR's variety against ours, then the zone details, then the tools. */
+:root {
+  --bg: #f3f4f2;
+  --panel: #ffffff;
+  --ink: #1c211f;
+  --muted: #5b6460;
+  --line: #d9ddd9;
+  --accent: #2f6d5f;
+  --good: #2e7d4f;
+  --good-bg: #e2f1e7;
+  --part: #a8670c;
+  --part-bg: #f7ead3;
+  --weak: #b23a2e;
+  --weak-bg: #f6e0dd;
+  --none: #6c7470;
+  --none-bg: #e7e9e7;
+  --wait: #4d5ea8;
+  --wait-bg: #e3e7f6;
+  --kotor: #8a8f8c;
+  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141816; --panel: #1c211f; --ink: #e6e9e7; --muted: #9aa39f; --line: #2f3633; --accent: #7cc3b0;
+    --good: #7fd19c; --good-bg: #1f3428; --part: #e9b45f; --part-bg: #3a2e19; --weak: #f08a7d; --weak-bg: #3c2220; --none: #a3aba7; --none-bg: #262c29;
+    --wait: #9fb0f0; --wait-bg: #232a44; --kotor: #7b827e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141816; --panel: #1c211f; --ink: #e6e9e7; --muted: #9aa39f; --line: #2f3633; --accent: #7cc3b0;
+  --good: #7fd19c; --good-bg: #1f3428; --part: #e9b45f; --part-bg: #3a2e19; --weak: #f08a7d; --weak-bg: #3c2220; --none: #a3aba7; --none-bg: #262c29;
+  --wait: #9fb0f0; --wait-bg: #232a44; --kotor: #7b827e;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 54px); line-height: 1.05; letter-spacing: -0.01em; }
+h2 { font-size: 30px; line-height: 1.15; }
+h2 .part-letter { font-family: var(--mono); color: var(--accent); margin-right: 10px; }
+h3 { font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+section { display: grid; gap: 18px; min-width: 0; }
+.lede { display: grid; gap: 16px; }
+.eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.04em; }
+.goal { border-left: 3px solid var(--accent); padding-left: 16px; display: grid; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12.5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.good { color: var(--good); background: var(--good-bg); }
+.part { color: var(--part); background: var(--part-bg); }
+.weak { color: var(--weak); background: var(--weak-bg); }
+.none { color: var(--none); background: var(--none-bg); }
+.wait { color: var(--wait); background: var(--wait-bg); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 15px; color: var(--muted); }
+.legend span.item { display: inline-flex; gap: 8px; align-items: center; }
+.board-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table.board { border-collapse: collapse; width: 100%; min-width: 680px; font-size: 15.5px; }
+.board th, .board td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.board th { font-family: var(--display); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.board tr:last-child td { border-bottom: 0; }
+.board td.id { font-family: var(--mono); color: var(--muted); width: 2.5em; }
+.board td.name { font-family: var(--display); font-weight: 700; }
+.board td.note { color: var(--muted); }
+table.grid { min-width: 760px; }
+.grid th:first-child, .grid td:first-child { font-family: var(--display); font-weight: 700; }
+.grid td { white-space: nowrap; }
+.grid th small { display: block; font-family: var(--body); text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; }
+.num { font-family: var(--mono); font-size: 0.92em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ask { background: var(--panel); border: 1px dashed var(--line); border-radius: 10px; padding: 14px 16px; color: var(--muted); font-size: 16px; }
+figure { margin: 0; display: grid; gap: 8px; }
+figure img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+figcaption { font-size: 15px; color: var(--muted); max-width: 72ch; }
+a { color: var(--accent); }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code { font-family: var(--mono); font-size: 0.88em; overflow-wrap: anywhere; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; max-width: 72ch; }
+
+/* the variety chart: per zone, three bars on one scale from 0 to 5 mm (1 mm is 20%) */
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; }
+.chart-row, .axis { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 12px; align-items: center; }
+@media (max-width: 560px) { .chart-row, .axis { grid-template-columns: 6.5em minmax(0, 1fr); } }
+.chart-row .label { font-family: var(--display); font-weight: 700; font-size: 15px; }
+.bars { display: grid; gap: 3px; }
+.b { position: relative; height: 13px; }
+.b i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+.b span { position: absolute; top: -2px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); padding-left: 6px; white-space: nowrap; }
+.b.k i { background: var(--kotor); }
+.b.o i { background: var(--accent); }
+.b.e i { background: var(--part); }
+.axis { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.axis .ticks { position: relative; height: 16px; border-top: 1px solid var(--line); }
+.axis .ticks span { position: absolute; top: 2px; transform: translateX(-50%); }
+.axis .ticks span.first { transform: none; }
+.axis .ticks span.last { transform: translateX(-100%); }
+.chart-key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
+.chart-key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+details.zone { border-top: 1px solid var(--line); padding-top: 14px; }
+details.zone summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; font-family: var(--display); font-weight: 700; font-size: 20px; }
+details.zone summary .num { font-weight: 400; font-size: 14px; color: var(--muted); }
+details.zone .body { display: grid; gap: 10px; padding: 12px 0 6px; }
+footer { color: var(--muted); font-size: 15px; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 24px; }
+</style>
+
+<div class="wrap">
+  <header class="lede">
+    <div class="eyebrow">kjk head customization · status on 19 November 2026</div>
+    <h1>Likeness HQ</h1>
+    <div class="goal">
+      <p><strong>The goal.</strong> Players get a head customization system that is varied enough to be interesting, and that fits KOTOR's look and feel.</p>
+      <p><strong>The bet.</strong> We think the FLAME head model, with controls of our own added to it, can be the base of that system. This page tracks how we prove it. The human heads of KOTOR 1 and 2 are the test set, because they show the variety KOTOR's look allows. There are 57 test heads: 45 heads from the games, Kreia, Bastila and 12 heads from mods.</p>
+      <p><strong>The plan.</strong> Part A holds what must be true for the whole head. Part B takes the face zone by zone. Everything else is tooling, listed at the end. The full roadmap is <code>docs/research/2026-11-19-head-roadmap.md</code> in the kjk repo.</p>
+    </div>
+    <div class="legend" aria-label="What the states mean">
+      <span class="item"><span class="pill good">Done</span> finished and checked</span>
+      <span class="item"><span class="pill wait">Measured</span> we have numbers, not yet a verdict</span>
+      <span class="item"><span class="pill part">Partly</span> started, with known faults</span>
+      <span class="item"><span class="pill weak">Paused</span> put aside on purpose</span>
+      <span class="item"><span class="pill none">Not yet</span> not started</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="a-title">
+    <h2 id="a-title"><span class="part-letter">A</span>Global</h2>
+    <p>These must hold for the whole head, whatever the player picks.</p>
+    <div class="board-wrap">
+      <table class="board">
+        <thead><tr><th></th><th>What must hold</th><th>State</th><th>Where it stands</th></tr></thead>
+        <tbody>
+          <tr><td class="id">A1</td><td class="name">Our head moves like KOTOR's</td><td><span class="pill good">Done</span></td><td class="note">Body animations, lip sync, head turns and glances follow the rig contract. The new blink, which is computed on each head, has only run in our Python tests so far, not in kjk.</td></tr>
+          <tr><td class="id">A2</td><td class="name">Nothing breaks</td><td><span class="pill part">Partly</span></td><td class="note">Helmets, masks, goggles and hair caps must still fit, so our head must stay inside the original's volume. A first check exists, but its result is not believed yet. It says every head pokes up to <span class="num">15 mm</span> out. This step will probably come late, because it sets the ends of the slider ranges.</td></tr>
+          <tr><td class="id">A3</td><td class="name">Our head loads in kjk</td><td><span class="pill none">Not yet</span></td><td class="note">As a KOTOR model, with the nodes the rig needs, wearing a texture.</td></tr>
+          <tr><td class="id">A4</td><td class="name">It fits the budget</td><td><span class="pill none">Not yet</span></td><td class="note">A vertex count and frame cost that the low-end GPU target can run.</td></tr>
+          <tr><td class="id">A5</td><td class="name">It looks like KOTOR in the engine</td><td><span class="pill none">Not yet</span></td><td class="note">This covers shading, texture resolution and how smooth the surface looks. In our test pictures our head looks lower in detail than KOTOR's, even though it has more vertices, because its facets show. It may need smoothing, or the test renderer's paint may be the cause.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ask">At each step we ask whether something is missing from this list.</p>
+  </section>
+
+  <section aria-labelledby="b-title">
+    <h2 id="b-title"><span class="part-letter">B</span>Zone by zone</h2>
+    <p>Each zone of the face goes through five steps. The zones will probably be split further once the work reaches them.</p>
+    <ul class="plain">
+      <li><strong>B1. Variety.</strong> Does KOTOR vary enough in this zone? We measure how far apart two KOTOR heads are in the zone, on average.</li>
+      <li><strong>B2. Reproduce.</strong> Do our fitted heads keep that variety? They must differ from each other as much as the KOTOR heads do, and the same heads must differ most. Each fit must also land close to its own KOTOR head.</li>
+      <li><strong>B3. Fix.</strong> Add controls or learned shapes for what we cannot reproduce.</li>
+      <li><strong>B4. Paint.</strong> Today we carry each KOTOR head's own texture onto our head. A customizer needs its own painting system.</li>
+      <li><strong>B5. Shippable.</strong> The zone still works with fewer vertices, and through sliders a player can use. When this happens is still open.</li>
+    </ul>
+    <div class="board-wrap">
+      <table class="board grid">
+        <thead><tr><th>Zone</th><th>B1 Variety<small>two KOTOR heads apart, whole face · zone alone</small></th><th>B2 Reproduce<small>variety kept, whole face · zone alone · fit error</small></th><th>B3 Fix</th><th>B4 Paint</th><th>B5 Shippable</th></tr></thead>
+        <tbody>
+          <tr><td>Forehead</td><td><span class="pill wait">3.63 · 1.96 mm</span></td><td><span class="pill wait">100% · 93% · 1.08 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Brows</td><td><span class="pill wait">2.53 · 1.96 mm</span></td><td><span class="pill wait">98% · 97% · 0.81 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Around the eyes</td><td><span class="pill wait">1.92 · 1.55 mm</span></td><td><span class="pill wait">93% · 92% · 0.64 mm</span></td><td><span class="pill part">Partly</span></td><td><span class="pill weak">Paused</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Nose</td><td><span class="pill wait">2.13 · 1.50 mm</span></td><td><span class="pill wait">98% · 90% · 0.55 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Cheeks</td><td><span class="pill wait">2.48 · 2.26 mm</span></td><td><span class="pill wait">97% · 98% · 0.77 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Mouth</td><td><span class="pill wait">2.08 · 1.00 mm</span></td><td><span class="pill wait">102% · 88% · 0.46 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Chin</td><td><span class="pill wait">2.64 · 1.49 mm</span></td><td><span class="pill wait">99% · 94% · 0.78 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+          <tr><td>Jaw</td><td><span class="pill wait">2.46 · 1.86 mm</span></td><td><span class="pill wait">98% · 95% · 0.80 mm</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td><td><span class="pill none">Not yet</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>KOTOR's variety against ours</h3>
+    <p>For each zone, the grey bar is how far apart two KOTOR heads are, on average over all 1,596 pairs. The green bar is the same for two of our fitted heads. The orange bar is how far each fitted head lies from its own KOTOR head. A zone keeps KOTOR's variety when the green bar matches the grey one. It tells heads apart when the orange bar is small next to the grey one.</p>
+    <div class="chart" role="img" aria-label="Per zone, KOTOR spread, our spread and fit error in millimetres. Forehead 3.63, 3.61, 1.08. Brows 2.53, 2.48, 0.81. Around the eyes 1.92, 1.79, 0.64. Nose 2.13, 2.07, 0.55. Cheeks 2.48, 2.40, 0.77. Mouth 2.08, 2.12, 0.46. Chin 2.64, 2.63, 0.78. Jaw 2.46, 2.43, 0.80.">
+      <div class="chart-row"><span class="label">Forehead</span><div class="bars"><div class="b k"><i style="width:72.6%"></i><span style="left:72.6%">3.63</span></div><div class="b o"><i style="width:72.2%"></i><span style="left:72.2%">3.61</span></div><div class="b e"><i style="width:21.6%"></i><span style="left:21.6%">1.08</span></div></div></div>
+      <div class="chart-row"><span class="label">Brows</span><div class="bars"><div class="b k"><i style="width:50.6%"></i><span style="left:50.6%">2.53</span></div><div class="b o"><i style="width:49.6%"></i><span style="left:49.6%">2.48</span></div><div class="b e"><i style="width:16.2%"></i><span style="left:16.2%">0.81</span></div></div></div>
+      <div class="chart-row"><span class="label">Around the eyes</span><div class="bars"><div class="b k"><i style="width:38.4%"></i><span style="left:38.4%">1.92</span></div><div class="b o"><i style="width:35.8%"></i><span style="left:35.8%">1.79</span></div><div class="b e"><i style="width:12.8%"></i><span style="left:12.8%">0.64</span></div></div></div>
+      <div class="chart-row"><span class="label">Nose</span><div class="bars"><div class="b k"><i style="width:42.6%"></i><span style="left:42.6%">2.13</span></div><div class="b o"><i style="width:41.4%"></i><span style="left:41.4%">2.07</span></div><div class="b e"><i style="width:11%"></i><span style="left:11%">0.55</span></div></div></div>
+      <div class="chart-row"><span class="label">Cheeks</span><div class="bars"><div class="b k"><i style="width:49.6%"></i><span style="left:49.6%">2.48</span></div><div class="b o"><i style="width:48%"></i><span style="left:48%">2.40</span></div><div class="b e"><i style="width:15.4%"></i><span style="left:15.4%">0.77</span></div></div></div>
+      <div class="chart-row"><span class="label">Mouth</span><div class="bars"><div class="b k"><i style="width:41.6%"></i><span style="left:41.6%">2.08</span></div><div class="b o"><i style="width:42.4%"></i><span style="left:42.4%">2.12</span></div><div class="b e"><i style="width:9.2%"></i><span style="left:9.2%">0.46</span></div></div></div>
+      <div class="chart-row"><span class="label">Chin</span><div class="bars"><div class="b k"><i style="width:52.8%"></i><span style="left:52.8%">2.64</span></div><div class="b o"><i style="width:52.6%"></i><span style="left:52.6%">2.63</span></div><div class="b e"><i style="width:15.6%"></i><span style="left:15.6%">0.78</span></div></div></div>
+      <div class="chart-row"><span class="label">Jaw</span><div class="bars"><div class="b k"><i style="width:49.2%"></i><span style="left:49.2%">2.46</span></div><div class="b o"><i style="width:48.6%"></i><span style="left:48.6%">2.43</span></div><div class="b e"><i style="width:16%"></i><span style="left:16%">0.80</span></div></div></div>
+      <div class="axis" aria-hidden="true"><span></span><div class="ticks"><span class="first" style="left:0">0</span><span style="left:20%">1</span><span style="left:40%">2</span><span style="left:60%">3</span><span style="left:80%">4</span><span class="last" style="left:100%">5 mm</span></div></div>
+      <div class="chart-key"><span><i style="background:var(--kotor)"></i>two KOTOR heads apart</span><span><i style="background:var(--accent)"></i>two of our heads apart</span><span><i style="background:var(--part)"></i>our head to its own KOTOR head</span></div>
+    </div>
+    <p>KOTOR's zones do vary. Two KOTOR mouths are <span class="num">2.1 mm</span> apart on average, and two foreheads <span class="num">3.6 mm</span>. Our fits keep between 93% and 102% of that variety in every zone. The heads that differ most in KOTOR also differ most in ours, with a correlation between 0.91 and 0.99. In every zone, the fit error is between 22% and 34% of the variety. Around the eyes is the zone that keeps the least, at 93%.</p>
+    <p>All 57 fitted heads lie nearer to their own KOTOR head than to any other, over the whole face. On a typical head the nearest other KOTOR head is <span class="num">0.65 mm</span> farther than its own.</p>
+    <p>Lined up on the whole face, a zone's variety mixes its own shape with where it sits on the head. The grid also gives each zone lined up on itself, which leaves only its shape. The mouth changes the most. Two KOTOR mouths are <span class="num">2.08 mm</span> apart on the whole face, but their shapes alone only <span class="num">1.00 mm</span>. Our fits keep 88% of that shape variety, the least of any zone. The nose keeps 90%, and every other zone 92% or more.</p>
+    <p class="ask">Whether a zone varies "enough" is a judgement by eye, and finally in the engine, not a number. The galleries are made for that judgement. Each shows all 57 heads cropped to one zone, numbered the same way on every sheet. So far there are galleries for the mouth only.</p>
+
+    <h3>Each zone</h3>
+    <details class="zone"><summary>Forehead <span class="num">KOTOR 3.63 mm apart · fit 1.08 mm off · 3 of 57 heads within 0.75 mm</span></summary><div class="body">
+      <p>The forehead varies the most of all zones, and it is also the one our fits miss the most. Hair-covered forehead is left out of the score, so the miss is on skin. The heads whose foreheads are almost fully bare score worse, at <span class="num">1.21 mm</span> against <span class="num">1.03 mm</span>.</p>
+      <p>Worst heads: <code>mod_kenobi</code>, <code>pmhc04</code> and <code>old_a_m</code>.</p></div></details>
+    <details class="zone"><summary>Brows <span class="num">KOTOR 2.53 mm apart · fit 0.81 mm off · 23 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>Worst heads: <code>pmhc04</code>, <code>n_mastkavarh</code> and <code>mod_kenobi</code>.</p></div></details>
+    <details class="zone"><summary>Around the eyes <span class="num">KOTOR 1.92 mm apart · fit 0.64 mm off · 51 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>This is the only zone with new controls so far. Each eye has 26 controls for its opening, and our lid edge lies <span class="num">0.87 mm</span> from KOTOR's eye slit on average, against <span class="num">5.85 mm</span> with FLAME alone. The blink is computed on each head, and all 57 close. The lid paint and the lash strip are paused. The details are in <code>docs/research/2026-11-19-eyelids-and-lashes.md</code>.</p>
+      <p>This zone keeps the least variety, 93%. Some opening controls hit their limits on up to 36 heads, which may be why.</p>
+      <p>Worst heads: <code>pmhc03</code>, <code>sith_app</code> and <code>n_traskh</code>.</p>
+      <figure>
+        <img src="{{blink}}" alt="Carth, Bastila and Kreia, each shown six times: KOTOR's head and ours, with the eyes open, half closed and closed.">
+        <figcaption>Picture 1. Carth, Bastila and Kreia blinking, from the test renderer. In each row: A KOTOR open, B ours open, C KOTOR half closed, D ours half closed, E KOTOR closed, F ours closed. Our closed lids show smeared liner, which is a painting fault (B4). The facets on our heads are the A5 question.</figcaption>
+      </figure></div></details>
+    <details class="zone"><summary>Nose <span class="num">KOTOR 2.13 mm apart · fit 0.55 mm off · 56 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>Worst heads: <code>pmhc04</code>, <code>p_joleeh</code> and <code>sith_app</code>.</p></div></details>
+    <details class="zone"><summary>Cheeks <span class="num">KOTOR 2.48 mm apart · fit 0.77 mm off · 19 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>Worst heads: <code>p_baodurh</code>, <code>pmhc04</code> and <code>n_zherronh</code>.</p></div></details>
+    <details class="zone" open><summary>Mouth <span class="num">KOTOR 2.08 mm apart, 1.00 mm in shape alone · fit 0.46 mm off · 56 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>Lined up on itself, so that only its shape counts, two KOTOR mouths differ by <span class="num">1.0 mm</span> on average. Our fits keep 88% of that, and the heads whose mouths differ most in KOTOR also differ most in ours (correlation 0.95). Our fit error, <span class="num">0.46 mm</span>, is close to half of KOTOR's mouth variety. So the mouth is the zone where our error matters most against KOTOR's variety.</p>
+      <p>In the pictures, KOTOR's lips have a crisp, sharp border. Ours are softer, and look more alike from head to head. Our lip line is jagged where the lips meet, which is a fault of our mesh. The distance maps are speckled red and green a few millimetres apart. That probably follows KOTOR's flat triangles, which a smooth surface cannot lie on. This guess is not checked yet.</p>
+      <p>Worst heads: <code>pmhc04</code>, <code>p_joleeh</code> and <code>n_zezkaiellh</code>.</p>
+      <figure><img src="{{g_mouth_kotor_front}}" alt="All 57 KOTOR mouths from the front, each shaded and textured."><figcaption>Picture 2. All 57 KOTOR mouths from the front. Each head appears twice: shaded in one colour to show its shape, then with its own texture. Every tile is 87 mm wide.</figcaption></figure>
+      <figure><img src="{{g_mouth_kotor_side}}" alt="All 57 KOTOR mouths from the side, shaded."><figcaption>Picture 3. The same KOTOR mouths from the side, shaded.</figcaption></figure>
+      <figure><img src="{{g_mouth_ours_front}}" alt="Our 57 fitted mouths from the front, shaded."><figcaption>Picture 4. Our fits of the same 57 heads from the front, shaded, in the same order and numbering as Picture 2.</figcaption></figure>
+      <figure><img src="{{g_mouth_ours_side}}" alt="Our 57 fitted mouths from the side, shaded."><figcaption>Picture 5. Our fits from the side, in the same order as Picture 3.</figcaption></figure>
+      <figure><img src="{{g_mouth_map_front}}" alt="Our 57 fitted mouths coloured by distance to KOTOR."><figcaption>Picture 6. Our fits coloured by their distance to their own KOTOR head, where KOTOR has skin. Green is 0 mm, yellow 0.75 mm and red 1.5 mm or more. Grey has no KOTOR skin under it. The number in each tile's corner is the mouth's mean distance.</figcaption></figure></div></details>
+    <details class="zone"><summary>Chin <span class="num">KOTOR 2.64 mm apart · fit 0.78 mm off · 21 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>Worst heads: <code>p_joleeh</code>, <code>mod_kenobi</code> and <code>pmhc04</code>.</p></div></details>
+    <details class="zone"><summary>Jaw <span class="num">KOTOR 2.46 mm apart · fit 0.80 mm off · 18 of 57 within 0.75 mm</span></summary><div class="body">
+      <p>On average our jaw is <span class="num">0.44 mm</span> wider than KOTOR's.</p>
+      <p>Worst heads: <code>sith_app</code>, <code>n_zezkaiellh</code> and <code>pmhc04</code>.</p></div></details>
+    <p><code>pmhc04</code> is among the three worst heads in seven of the eight zones.</p>
+    <p class="ask">At each step we ask whether a zone is missing, or whether a zone must be split.</p>
+  </section>
+
+  <section aria-labelledby="t-title">
+    <h2 id="t-title">Tooling</h2>
+    <p>These tools serve parts A and B. They are not goals themselves. They live in the likeness-fit tools folder, and its README describes each one.</p>
+    <div class="board-wrap">
+      <table class="board">
+        <thead><tr><th>Tool</th><th>Serves</th><th>State</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Test heads</td><td>B1, B2</td><td><span class="pill good">Done</span></td><td class="note">57 KOTOR heads, each wrapped with our mesh. Hair and open edges are left out. The mod head <code>mod_hp_pfha01</code> may have a faulty target.</td></tr>
+          <tr><td class="name">The fit</td><td>B2</td><td><span class="pill good">Done</span></td><td class="note">Fits FLAME and the eye opening controls to each head. It finds heads made by the sliders themselves to within <span class="num">0.013 mm</span>.</td></tr>
+          <tr><td class="name">Closeness</td><td>B2</td><td><span class="pill good">Done</span></td><td class="note">The distance from each fit to its own KOTOR head, zone by zone, on KOTOR skin only.</td></tr>
+          <tr><td class="name">Variety</td><td>B1, B2</td><td><span class="pill good">Done</span></td><td class="note">How far apart the KOTOR heads are, and how far apart our fits are, zone by zone. New on 19 November.</td></tr>
+          <tr><td class="name">Identity</td><td>B2</td><td><span class="pill good">Done</span></td><td class="note">Checks that each fit is nearest to its own KOTOR head. All 57 pass over the whole face.</td></tr>
+          <tr><td class="name">Variety by zone shape</td><td>B1, B2</td><td><span class="pill good">Done</span></td><td class="note">The same, with each zone lined up on itself, so a zone's own shape is separated from where it sits.</td></tr>
+          <tr><td class="name">Zone galleries</td><td>B1, B2</td><td><span class="pill part">Partly</span></td><td class="note">All 57 heads cropped to one zone: KOTOR shaded and textured, our fits, and distance maps. Made for the mouth so far.</td></tr>
+          <tr><td class="name">Mouth animation</td><td>A1</td><td><span class="pill part">Partly</span></td><td class="note">Plays KOTOR's lip sync shapes and expressions on our fitted heads with KOTOR's face bones, and checks the lips and the inside of the mouth. It runs on ten heads. Its lip gap measure is wrong for pressed lips.</td></tr>
+          <tr><td class="name">Headgear fit</td><td>A2</td><td><span class="pill part">Partly</span></td><td class="note">How far our head lies outside the KOTOR head and its hair. Its first result is not believed yet.</td></tr>
+          <tr><td class="name">Distance maps</td><td>A2, B2</td><td><span class="pill part">Partly</span></td><td class="note">Colours each fitted head by its distance from the KOTOR head. Made for nine heads, not looked at yet.</td></tr>
+          <tr><td class="name">Test pictures</td><td>B2, B4</td><td><span class="pill good">Done</span></td><td class="note">Textured sheets from our test renderer. They only check the method. Likeness is judged in the engine.</td></tr>
+          <tr><td class="name">In-engine comparison</td><td>A3, A5</td><td><span class="pill none">Not yet</span></td><td class="note">Our head next to KOTOR's in kjk, wearing the character's texture.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>Numbers come from <code>kotor_fit_v6b.json</code>, <code>variety_v6.json</code> and <code>judge_v6/identity.json</code>, <code>variety_v6b.json</code> and the <code>gallery</code> folder in the likeness-fit data folder, made on 19 November 2026.</p>
+  </footer>
+</div>

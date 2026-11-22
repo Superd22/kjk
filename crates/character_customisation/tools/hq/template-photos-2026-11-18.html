@@ -1,0 +1,340 @@
+<title>Likeness HQ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a status board up top, then one section per zone of the face with two verdicts, three lists and a picture. */
+:root {
+  --bg: #f3f4f2;
+  --panel: #ffffff;
+  --ink: #1c211f;
+  --muted: #5b6460;
+  --line: #d9ddd9;
+  --accent: #2f6d5f;
+  --good: #2e7d4f;
+  --good-bg: #e2f1e7;
+  --part: #a8670c;
+  --part-bg: #f7ead3;
+  --weak: #b23a2e;
+  --weak-bg: #f6e0dd;
+  --none: #6c7470;
+  --none-bg: #e7e9e7;
+  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141816; --panel: #1c211f; --ink: #e6e9e7; --muted: #9aa39f; --line: #2f3633; --accent: #7cc3b0;
+    --good: #7fd19c; --good-bg: #1f3428; --part: #e9b45f; --part-bg: #3a2e19; --weak: #f08a7d; --weak-bg: #3c2220; --none: #a3aba7; --none-bg: #262c29;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141816; --panel: #1c211f; --ink: #e6e9e7; --muted: #9aa39f; --line: #2f3633; --accent: #7cc3b0;
+  --good: #7fd19c; --good-bg: #1f3428; --part: #e9b45f; --part-bg: #3a2e19; --weak: #f08a7d; --weak-bg: #3c2220; --none: #a3aba7; --none-bg: #262c29;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 54px); line-height: 1.05; letter-spacing: -0.01em; }
+h2 { font-size: 28px; line-height: 1.15; }
+h3 { font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+.lede { display: grid; gap: 16px; }
+.eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.04em; }
+.goal { border-left: 3px solid var(--accent); padding-left: 16px; display: grid; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12.5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.good { color: var(--good); background: var(--good-bg); }
+.part { color: var(--part); background: var(--part-bg); }
+.weak { color: var(--weak); background: var(--weak-bg); }
+.none { color: var(--none); background: var(--none-bg); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 15px; color: var(--muted); }
+.legend span.item { display: inline-flex; gap: 8px; align-items: center; }
+.board-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table.board { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15.5px; }
+.board th, .board td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.board th { font-family: var(--display); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.board tr:last-child td { border-bottom: 0; }
+.board td:first-child a { color: var(--ink); font-family: var(--display); font-weight: 700; text-decoration: none; }
+.board td:first-child a:hover, .board td:first-child a:focus-visible { color: var(--accent); text-decoration: underline; }
+.board td.note { color: var(--muted); }
+section.zone { display: grid; gap: 20px; padding-top: 32px; border-top: 1px solid var(--line); scroll-margin-top: 16px; }
+.zone-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: baseline; justify-content: space-between; }
+.verdicts { display: flex; flex-wrap: wrap; gap: 8px; }
+.verdicts .pill b { font-weight: 500; opacity: 0.75; }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 820px) { .cols { grid-template-columns: 1fr; } }
+.cols > div { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.cols ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 16px; }
+.num { font-family: var(--mono); font-size: 0.92em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+figure { margin: 0; display: grid; gap: 8px; }
+figure img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+figure.narrow img { max-width: 520px; }
+figcaption { font-size: 15px; color: var(--muted); max-width: 72ch; }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+footer { color: var(--muted); font-size: 15px; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 24px; }
+code { font-family: var(--mono); font-size: 0.88em; }
+</style>
+
+<div class="wrap">
+  <header class="lede">
+    <div class="eyebrow">kjk head customization · status on 18 November 2026</div>
+    <h1>Likeness HQ</h1>
+    <p>This page shows how well our head system can reproduce a real face, zone by zone. For each zone it says what is done, what we still do not like, and what we want to try next.</p>
+    <div class="goal">
+      <p><strong>The goal.</strong> Show that the sliders of our character designer can reproduce any face.</p>
+      <p>So each zone gets two verdicts. The first asks whether the sliders can make that part of a face. It is judged against 15 heads whose true 3D shape we know, with every slider set as well as it can be. The second asks how well a single photo sets those sliders. The first verdict is the one the goal is about.</p>
+    </div>
+    <div class="legend" aria-label="What the verdicts mean">
+      <span class="item"><span class="pill good">Good</span> close to the real face</span>
+      <span class="item"><span class="pill part">Partly</span> works, with known faults</span>
+      <span class="item"><span class="pill weak">Weak</span> often wrong</span>
+      <span class="item"><span class="pill none">Not yet</span> not built or not tested</span>
+    </div>
+  </header>
+
+  <figure>
+    <img src="{{sheet}}" alt="Six people from the test sheet. Each photo is shown beside our head built from it. The first two pairs are the Star Wars heads #901 and #902.">
+    <figcaption>The test sheet as it stands today. Each photo sits beside the head our system built from it. The full sheet has 15 people: the three Star Wars heads (#901 to #903) and twelve people from the London face set.</figcaption>
+  </figure>
+
+  <div class="board-wrap">
+    <table class="board">
+      <thead><tr><th scope="col">Zone</th><th scope="col">Can the sliders make it</th><th scope="col">From a photo</th><th scope="col">In one line</th></tr></thead>
+      <tbody>
+        <tr><td><a href="#shape">Face shape</a></td><td><span class="pill good">Good</span></td><td><span class="pill part">Partly</span></td><td class="note">The sliders reach the true face within about 1.7 mm. A photo leaves the head's tilt uncertain.</td></tr>
+        <tr><td><a href="#jaw">Jaw and chin</a></td><td><span class="pill good">Good</span></td><td><span class="pill weak">Weak</span></td><td class="note">The sliders make these jaws. The photo's outline of the chin is often wrong.</td></tr>
+        <tr><td><a href="#nose">Nose</a></td><td><span class="pill part">Partly</span></td><td><span class="pill part">Partly</span></td><td class="note">The width is right. The tip and the groove beside it are the same on everyone.</td></tr>
+        <tr><td><a href="#eyes">Eyes</a></td><td><span class="pill part">Partly</span></td><td><span class="pill part">Partly</span></td><td class="note">Opening, iris and pupil follow the photo. New sliders for the crease, the inner fold and a full upper lid are not read from photos yet.</td></tr>
+        <tr><td><a href="#mouth">Mouth and lips</a></td><td><span class="pill part">Partly</span></td><td><span class="pill part">Partly</span></td><td class="note">14 sliders set the lips' outline and colour. 3D depth and fullness are not built. The mouth sits too low on tilted photos.</td></tr>
+        <tr><td><a href="#brows">Eyebrows</a></td><td><span class="pill good">Good</span></td><td><span class="pill good">Good</span></td><td class="note">Seven numbers per eyebrow follow the photos closely.</td></tr>
+        <tr><td><a href="#lashes">Lashes</a></td><td><span class="pill part">Partly</span></td><td><span class="pill part">Partly</span></td><td class="note">The upper lash line follows the photo. Lash colour is the same on everyone.</td></tr>
+        <tr><td><a href="#ears">Ears</a></td><td><span class="pill weak">Weak</span></td><td><span class="pill none">Not yet</span></td><td class="note">Our sliders reached only 27% of the way to the scanned ears.</td></tr>
+        <tr><td><a href="#skin">Skin and hair</a></td><td><span class="pill none">Not yet</span></td><td><span class="pill part">Partly</span></td><td class="note">The skin takes the photo's cheek colour. There are no skin sliders yet, and no hair.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <section class="zone" id="shape">
+    <div class="zone-head">
+      <h2>Face shape</h2>
+      <div class="verdicts"><span class="pill good"><b>Sliders</b> Good</span><span class="pill part"><b>Photo</b> Partly</span></div>
+    </div>
+    <p>The overall shape of the head comes from 300 sliders taken from FLAME, a model learned from about 3,800 scanned heads. They set how wide and long the face is, the cheeks, the forehead, and where the nose and mouth sit.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>Set from a true 3D head, the sliders come within <span class="num">1.7 mm</span> of the face and <span class="num">1.4 mm</span> around the jaw, on average.</li>
+        <li>From a front photo, our head's outline lies <span class="num">3.9 mm</span> from the true head's, against <span class="num">6.1 mm</span> for the average head.</li>
+        <li>A profile photo, when there is one, brings the profile from the nose to the chin to <span class="num">0.87 mm</span>.</li>
+        <li>The sheet now draws our head turned left or right as the photo's head is, so the two can be compared in place.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>A head tilted forward looks much like a short face in one photo. The fit tilts most heads about <span class="num">4.5°</span> chin down, which is most likely not real.</li>
+        <li>The skull above the eyes is the same dome on everyone.</li>
+        <li>How deep the eyes sit is the average on everyone. A front photo holds no depth.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>Test the base layer against the true heads with each point free to slide along the surface, as the nose tests already do.</li>
+        <li>Find a better way to tell a tilted head from a short face, perhaps from the profile photo.</li>
+        <li>Read the eye depth from a three-quarter photo or from shading.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="zone" id="jaw">
+    <div class="zone-head">
+      <h2>Jaw and chin</h2>
+      <div class="verdicts"><span class="pill good"><b>Sliders</b> Good</span><span class="pill weak"><b>Photo</b> Weak</span></div>
+    </div>
+    <p>The jaw and chin are set by the same 300 sliders. A separate jawline part with five controls was built and then switched off, because it made the photo fits worse.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>Set from the true 3D heads, the sliders make these jaws to about <span class="num">1.4 mm</span>, with a defined edge.</li>
+        <li>The jawline part adds nothing on the true heads. Its controls stay within <span class="num">1.5 mm</span> of zero.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>The face detector draws a round line at every chin. On the photo of #901 it is round where the chin is flat.</li>
+        <li>Pointed chins are not found. #005 is the test case.</li>
+        <li>Chin width wants <span class="num">+6.4 mm</span> on average, so the base head's chin is too narrow.</li>
+        <li>A beard confuses the outline, as on #004.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>Build the average chin width into the base head.</li>
+        <li>Read the chin's edge from the photo's own shading, the way the nose's width is now read.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="zone" id="nose">
+    <div class="zone-head">
+      <h2>Nose</h2>
+      <div class="verdicts"><span class="pill part"><b>Sliders</b> Partly</span><span class="pill part"><b>Photo</b> Partly</span></div>
+    </div>
+    <p>The nose has the page's 25 nose sliders, two nose controls learned from the 15 true 3D heads, and a fixed correction built into the base head. Most of today's work was here.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>The round lumps that every head had at the nostril corners are gone. A fixed correction learned from the 15 true heads removed them.</li>
+        <li>Set from the true 3D heads, the sliders make the nose's width within about <span class="num">1 mm</span>, from the wings up toward the bridge.</li>
+        <li>From a photo, the width at the wings is now read from the picture itself. Our head lands within <span class="num">0.7 mm</span> of the photo, and its widths follow the photos with a correlation of <span class="num">0.99</span>.</li>
+        <li>Faint creases under the wings came from a fault in the test, not from the sliders, and are fixed.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>Our tips are broader and rounder than the real ones. Lincoln's tip is flat, and #901's and #902's tips are pointier, with a bulge just above #901's.</li>
+        <li>Our noses have no groove between the tip and the wings, so the lower nose reads as one broad block.</li>
+        <li>Apart from the width, no nose slider is read from a photo yet.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>Measure the tip and the groove on the 15 true heads, check whether the sliders can make them, and add a slider only where they cannot.</li>
+        <li>Then read the nose sliders from the front and profile photos.</li>
+      </ul></div>
+    </div>
+    <figure class="narrow">
+      <img src="{{nose_tip}}" alt="For #902, #903 and one scanned head: the true 3D nose on the left, and our sliders set from it on the right.">
+      <figcaption>The true 3D nose (left) and our sliders set from it as well as they can (right). The widths match. The tips do not: ours are rounder and have no groove beside the tip.</figcaption>
+    </figure>
+    <figure>
+      <img src="{{nose_capacity}}" alt="Fifteen small charts of nose width against height above the bottom of the nose. The black line is the true head and the red line is our sliders.">
+      <figcaption>The nose's width at each height, from just above the wings (6 mm) toward the bridge (20 mm). Black is the true head and red is our sliders set as well as they can. Five scans show a black line that jumps up and down; the measure fails on those heads, not the nose.</figcaption>
+    </figure>
+    <figure>
+      <img src="{{nose_width}}" alt="Three people. The photo on the left and our head on the right, with light green lines at the edges of our nose wings running across both.">
+      <figcaption>The nose's width read from the photo. The light green lines mark the edges of our nose wings and run on across the photo. Our head is turned the same way as the photo's head.</figcaption>
+    </figure>
+  </section>
+
+  <section class="zone" id="eyes">
+    <div class="zone-head">
+      <h2>Eyes</h2>
+      <div class="verdicts"><span class="pill part"><b>Sliders</b> Partly</span><span class="pill part"><b>Photo</b> Partly</span></div>
+    </div>
+    <p>Each eye has controls for the width, height and place of its opening, and 14 numbers for the curve of its lids. The iris has a size, a colour and a pupil size. Newer sliders shape the lid: the crease's height and depth, a fold of skin over the inner corner, how full the upper lid is between its edge and the brow, and how deep the eye sits.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>Over about 105 photos, our lid outline lies <span class="num">0.30 mm</span> from the photo's, and the width between the eye corners matches.</li>
+        <li>The iris colour and the pupil size are set by drawing our head and measuring its eyes the same way as the photo's. #005's iris used to be 3 times too bright against the white of the eye; now it matches within 0.002. Pupils match within 0.03 of the iris's width.</li>
+        <li>The pink inner corner no longer breaks into a light wedge where the lids leave the eyeball, as it did on #003.</li>
+        <li>An inner fold, a crease, upper lid fullness and eye depth can now be set. Fullness and depth are smooth 3D sliders, with no creases from 0.5 back to fully forward.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>The new lid sliders are not read from photos, so on the sheet #005 still has a crease-less but hollow lid and a visible pink corner.</li>
+        <li>Our lids have no visible thickness, so the white of the eye ends in a hard edge, and dark eyes look lighter than on the photos.</li>
+        <li>In profile the upper lid's edge has a small pointed hook.</li>
+        <li>Learning lid sliders from the true 3D heads failed: in that area the scans record eyebrow hair and lashes as skin.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>Read the crease and the inner fold from the front photo, and the lid's fullness and depth from the profile photo.</li>
+        <li>Paint the lids' edges and their shadow on the white of the eye.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{eyes}}" alt="Four people's eyes, lined up on the pupils: the photo, our head before the eye work and our head after it.">
+      <figcaption>The iris and pupil before and after, on #902, #004, #005 and #006. Each photo's eyes sit above our head before and after, lined up on the pupils.</figcaption>
+    </figure>
+  </section>
+
+  <section class="zone" id="mouth">
+    <div class="zone-head">
+      <h2>Mouth and lips</h2>
+      <div class="verdicts"><span class="pill part"><b>Sliders</b> Partly</span><span class="pill part"><b>Photo</b> Partly</span></div>
+    </div>
+    <p>The mouth is placed by the face's shape sliders. The lips are paint, set by 14 sliders. Six sliders set the upper lip's outline: its height, the bow's depth, width and sharpness, its sides and its corners. Four set the lower lip's outline: its height, the width of its bottom, its sides and its corners. Four set the lip colour against the skin: lightness, redness, warmth and the upper lip's shade.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>The bow of the upper lip now differs between people. It used to look the same on everyone, because the old paint followed the face detector's outline, which is close to an average mouth.</li>
+        <li>On our heads the upper lip's outline is <span class="num">0.52 mm</span> from the photo's on average, against <span class="num">0.89 mm</span> with the old paint. The lower lip's is <span class="num">0.33 mm</span>, against <span class="num">1.07 mm</span>.</li>
+        <li>The lower lip's colour against the skin matches the photo exactly, and the upper lip's is within about 3 of the smallest steps a person can see. With the old fixed colour they were 14 and 22 steps off. #903's red lips, #002's pink lips and #006's mauve lips come through.</li>
+        <li>With a profile photo, how far each lip stands forward is right within about <span class="num">0.5 mm</span>.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>On photos where the head is tilted, our mouth sits too low, so the gap between nose and lip looks too long, as on #006, #010 and #012. This is parked.</li>
+        <li>The lips are flat and matte. The photos show shine and texture.</li>
+        <li>#006's lower lip is fuller in 3D than her upper lip. A front outline cannot show how far a lip pushes forward or how round it is.</li>
+        <li>A lopsided bow, as on #901, can only get a symmetrical one.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>Sliders for how far each lip pushes forward and how full and rolled it is, tested against the 15 true 3D heads.</li>
+        <li>Lip shine.</li>
+        <li>Test whether the sliders can place the mouth right on the true 3D heads, with no photo involved.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{mouth}}" alt="Six people in rows: the photo, our head with the old paint, and our head with the lip sliders. The first three rows trace each lip's outline. The last three show colour patches of each lip and the cheek.">
+      <figcaption>Before and after. The first three rows (#901, #005, #010) show the outline: on the photo, yellow is the photo's lip edge, dark blue our old paint and light blue the sliders, standing on the photo's own line between the lips. The last three rows (#903, #002, #006) show the colour, with patches of the measured upper lip, lower lip and cheek under each picture.</figcaption>
+    </figure>
+  </section>
+
+  <section class="zone" id="brows">
+    <div class="zone-head">
+      <h2>Eyebrows</h2>
+      <div class="verdicts"><span class="pill good"><b>Sliders</b> Good</span><span class="pill good"><b>Photo</b> Good</span></div>
+    </div>
+    <p>An eyebrow is hair drawn on the brow ridge. Seven numbers set its line and thickness, plus its two ends, its colour and two grooming settings. Each side has its own numbers, so uneven eyebrows stay uneven.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>The seven numbers leave only <span class="num">0.19 mm</span> of an eyebrow's height unexplained.</li>
+        <li>Our eyebrows' thickness and darkness follow the photos with a correlation of about <span class="num">0.8</span> to <span class="num">0.9</span>.</li>
+        <li>An eyebrow hidden by hair, as under #003's fringe, is refused and copies the other side or the average eyebrow.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>A raised eyebrow and a high eyebrow cannot be told apart.</li>
+        <li>The hair is drawn for the front view, so it is not quite right on a turned head.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>Store the hair on the skin so it turns with the head.</li>
+        <li>Set the ridge from real depth.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="zone" id="lashes">
+    <div class="zone-head">
+      <h2>Lashes</h2>
+      <div class="verdicts"><span class="pill part"><b>Sliders</b> Partly</span><span class="pill part"><b>Photo</b> Partly</span></div>
+    </div>
+    <p>The lashes are paint drawn from the lid edge. Four numbers set how dark the line on each lid is and how far the fringe reaches. They were left at this state on purpose.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul>
+        <li>Our upper lash line follows the photos with a correlation of <span class="num">0.85</span>, and how far it reaches with <span class="num">0.72</span>.</li>
+      </ul></div>
+      <div><h3>What we don't like</h3><ul>
+        <li>The lash colour is one dark brown on everyone.</li>
+        <li>The lower lid measure counts the shadow under the eye as lashes.</li>
+        <li>Eyeliner cannot be told from a strong natural lash line.</li>
+      </ul></div>
+      <div><h3>Next ideas</h3><ul>
+        <li>A lash colour.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="zone" id="ears">
+    <div class="zone-head">
+      <h2>Ears</h2>
+      <div class="verdicts"><span class="pill weak"><b>Sliders</b> Weak</span><span class="pill none"><b>Photo</b> Not yet</span></div>
+    </div>
+    <p>The ears have had no work of their own. In an earlier test on twelve 3D scans, the sliders of that time closed only 27% of the gap between the average ear and the scanned ears. That test was before the 300 FLAME sliders were added, and it has not been run again.</p>
+    <div class="cols">
+      <div><h3>Done</h3><ul><li>Nothing yet.</li></ul></div>
+      <div><h3>What we don't like</h3><ul><li>The ears are close to the same on everyone.</li></ul></div>
+      <div><h3>Next ideas</h3><ul><li>Run the slider test on the ears against the 15 true heads with today's sliders.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="zone" id="skin">
+    <div class="zone-head">
+      <h2>Skin and hair</h2>
+      <div class="verdicts"><span class="pill none"><b>Sliders</b> Not yet</span><span class="pill none"><b>Photo</b> Not yet</span></div>
+    </div>
+    <p>On the test sheet our skin now takes the colour of the photo's cheek, below the eyes. It had to come with the lip colour, because a lip colour is a difference from the skin: on one peach skin for everyone, #002's pink lips came out red-orange. These are three colour numbers set from the photo, not sliders yet, and the whole face gets one colour. Hair is not part of this work yet. The chosen direction for hair is a bald base head with hair caps that must fit all 14 headgear items.</p>
+  </section>
+
+  <footer>
+    <p>All numbers come from the test scripts in <code>~/.claude/tools/likeness-fit</code>. The full reference, with every control, its range and its score, is <code>docs/research/2026-11-17-head-parts-and-controls.md</code> in the kjk repository.</p>
+    <p>The true 3D heads are the three Star Wars heads, Lincoln's life mask, the Lee Perry-Smith head and ten people from Meta's Multiface set. None of the Star Wars or Multiface data may ship.</p>
+  </footer>
+</div>
