@@ -6,6 +6,7 @@ This note was written on 2026-11-19. It is the roadmap for kjk's head customizat
 
 Read this whole note before working on the head. It is the plan. Then follow these rules.
 - Before you build a measure, a slider, a construction or a solve, read `2026-11-21-head-measures-and-sliders-guide.md`. It holds the method, the rules and the traps learned on the nose, the jaw, the brow, the eyes and the paint, and ends with a checklist for a new feature.
+- There are two copies of this folder on the machine. The one that counts is in the worktree, at `.claude/worktrees/head-paint/docs/research/`, because that is the one git tracks on the branch `character-customisation`. The copy at `/Users/david/perso/kjk/docs/research/` is an untracked leftover of how this folder started, and it is kept in step by hand. Edit the worktree's copy and commit it.
 - Say which roadmap item your work serves (A1 to A5, a zone's B1 to B5, a C step, a D step, or tooling).
 - Test on the base head and the 57 KOTOR test heads only, never on random slider settings.
 - Write every text for a person by the rules of `CLAUDE.md` at the root of the kjk repo: plain full sentences, one fact per sentence, with real numbers.
