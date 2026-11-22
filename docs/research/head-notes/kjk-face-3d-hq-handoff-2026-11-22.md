@@ -53,10 +53,10 @@ The 13 briefs this HQ wrote are tracked in the repo at `docs/research/head-brief
 ## How David wants the work run
 
 These all come from this conversation:
-- **Pictures and measured overlaps.** David wants measurement and overlap: KOTOR's outline drawn over ours, from the side, the front and below. He reacts to profile views in viewer 2.
-- **His approvals.** "Yes go" approves the next step that was proposed. Once he has said a result looks better, the HQ may fold it. While he is away, he allows a couple of extra loops and folding anything that is clearly better.
-- **Things that need him.** Ask him before anything that changes the shared base mesh (new topology), and before anything that moves the neck's rim (never, decision 68).
-- **Pronouns.** Refer to David by name in briefs. His pronouns have not been stated, so use they/them, or his name.
+- **Pictures and measured overlaps.** David wants measurement and overlap: KOTOR's outline drawn over ours, from the side, the front and below. They react to profile views in viewer 2.
+- **His approvals.** "Yes go" approves the next step that was proposed. Once they have said a result looks better, the HQ may fold it. While they are away, they allow a couple of extra loops and folding anything that is clearly better.
+- **Things that need him.** Ask them before anything that changes the shared base mesh (new topology), and before anything that moves the neck's rim (never, decision 68).
+- **Pronouns.** Refer to David by name in briefs. David's pronouns have not been stated, so use they/them, or the name. This note used to say "his" in the lines above while asking for they/them, which is why they now read they/them.
 - **Conversation model.** Opus for build conversations. Sub-agents only as judges, and judges only when a prototype needs them.
 - **Effort.** Two to four loops per step at most. Do not chase perfection.
 - **Before relaying a report, look at its main picture yourself.** Shrink it with `sips -Z 1500 <png> --out <jpg> -s format jpeg`, then Read it. Say what you saw, apart from what was measured.
