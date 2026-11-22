@@ -293,19 +293,6 @@ fn lids_of(e: &eye_curves::EyeEdges) -> [Vec<usize>; 2] {
     })
 }
 
-fn solve3(m: [[f64; 3]; 3], b: [f64; 3]) -> [f64; 3] {
-    let det = |m: [[f64; 3]; 3]| m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-    let d = det(m);
-    if d.abs() < 1e-12 { return [0.0; 3]; }
-    let mut out = [0.0; 3];
-    for k in 0..3 {
-        let mut mk = m;
-        for r in 0..3 { mk[r][k] = b[r]; }
-        out[k] = det(mk) / d;
-    }
-    out
-}
-
 /// How wavy a built head's lid edges are (frame of the head, mm): per lid, each inner point's distance from the same edge smoothed along
 /// its length (a quadratic through it and two neighbours on each side), seen from the front and in depth, for points 3 mm or more from both tips, and the largest change of the front-view turn
 /// between neighbouring points (degrees). Returns the largest of each over the four lids.

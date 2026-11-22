@@ -5,7 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
-description = "Prototype: the eye opening built from a curve on the eyeball, set by ten handles, with the skin round it and a lid piece that closes over the curve. A preview for viewer 2 only; the live head does not use it."
+description = "The eye opening built from a curve on the eyeball, set by ten handles, with the skin round it, the lid piece that closes over the curve, and the finer triangles below the lower lids. `head_sliders` builds every head's eyes through it."
 
 [lib]
 crate-type = ["rlib", "cdylib"]
@@ -19,6 +19,3 @@ serde_json.workspace = true
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.129"
 
-[[bin]]
-name = "eye_curve_check"
-path = "src/bin/eye_curve_check.rs"

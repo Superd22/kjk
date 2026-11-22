@@ -14,7 +14,6 @@
 //! - `solve`: the slider values whose feature best matches a measured one; `verdict`: a made feature against its target, in words;
 //! - `checks`, `heads`, `bench`, `render` (native only): the checks of a measure, the KOTOR heads and their stand-ins, the tool's
 //!   commands and the clay pictures;
-//! - `round1`: the nose's first sliders, learned from the KOTOR heads, kept for `nose_bench`;
 //! - `web` (WebAssembly only): building a head and measuring its features in the browser.
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -42,7 +41,6 @@ pub mod nose_profile;
 pub mod nose_base;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod render;
-pub mod round1;
 pub mod set;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod skull;

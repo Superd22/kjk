@@ -1,9 +1,11 @@
-//! Prototype (2026-11-21): the eye opening built from a curve on the eyeball. The curve is drawn from ten handles. The lid's rim is laid
-//! on it, the layers under the rim go back against the eyeball, and the skin in a ring round the eye is stretched and lowered to meet it.
-//! The lid piece is the upper arch swept down past the lower arch about a line through the eyeball's centre.
+//! The eye opening built from a curve on the eyeball. The curve is drawn from ten handles. The lid's rim is laid on it, the layers under
+//! the rim go back against the eyeball, and the skin in a ring round the eye is stretched and lowered to meet it. The lid piece is the
+//! upper arch swept down past the lower arch about a line through the eyeball's centre.
 //!
-//! This is a port of the shape-only prototype `curve.rs` for viewer 2's preview. It keeps the prototype's sizes (its environment
-//! defaults) and its "polar" mode only. It does not depend on `head_sliders`, so the live slider module is not touched.
+//! It began on 2026-11-21 as a prototype for viewer 2's preview, and it is now part of how every head is built: `head_sliders` reads
+//! `curve::HANDLES` for the opening's ten values, builds each eye through `maker`, and takes the finer triangles below the lower lids
+//! from `refine`. It keeps the prototype's sizes (its environment defaults) and its "polar" mode only, and it does not depend on
+//! `head_sliders`, so the dependency runs one way.
 
 pub mod curve;
 pub mod maker;

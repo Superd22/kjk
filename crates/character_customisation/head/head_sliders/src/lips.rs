@@ -388,8 +388,6 @@ pub const AFTER: [bool; 8] = [true, false, false, false, false, false, false, tr
 
 /// How far round each corner the corner fields move the skin as one piece, in mm.
 const FLAT: f64 = 6.0;
-/// The mouth's inside follows the lips fully this far behind the line between the lips, then fades out over the second number (mm).
-const LIPS_INSIDE: (f64, f64) = (10.0, 10.0);
 
 /// The lip sliders' movements, made once on the base head. Each is a smooth movement of the vertices round the mouth, in mm for one
 /// unit of the slider, so the same value gives the same movement on any head.

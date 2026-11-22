@@ -29,9 +29,5 @@ head_paint = { path = "../head_paint" }
 wasm-bindgen = "0.2.129"
 
 [[bin]]
-name = "nose_bench"
-path = "src/bin/nose_bench.rs"
-
-[[bin]]
 name = "sliders"
 path = "src/bin/sliders.rs"

@@ -101,8 +101,6 @@ const ZONE_SLIDERS: [Param; 8] = [
     p("skin_eyes_dark", 0.0, 1.5),
     p("skin_mouth_dark", 0.0, 1.5),
 ];
-/// The zone (index into `ZONES`) that each zone slider is compared in. "Blood round the lips" and "Darker round the mouth" share theirs.
-const ZONE_OF_SLIDER: [usize; 8] = [0, 1, 2, 5, 6, 3, 4, 5];
 
 impl Param {
     fn to_unit(&self, v: f64) -> f64 {

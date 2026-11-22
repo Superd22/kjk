@@ -641,7 +641,6 @@ struct Plan {
     close: f64,
     ladders: Vec<Vec<(f64, u32)>>,
     col_src: Vec<(usize, usize, f64)>,
-    join: Vec<f64>,
     hidden: Vec<u32>,
     info: PieceInfo,
     /// Per column, the angle the piece's colour is mirrored about: the skin's crossing, or on a curve the upper arch.
@@ -953,7 +952,7 @@ fn plan(rig: &EyeRig, triangles: &[[u32; 3]], pts: &dyn Fn(u32) -> V3, s: &Setti
         })
         .collect();
     let col_join = if arches.is_some() { margin_up.clone() } else { join.clone() };
-    Plan { pivot, col_x, edge, top, rho_out, rho_in, close, ladders: up_ladder, col_src, join, hidden, info, lash, col_join, mirror_start: if arches.is_some() { CURVE_MIRROR_START } else { MIRROR_START } }
+    Plan { pivot, col_x, edge, top, rho_out, rho_in, close, ladders: up_ladder, col_src, hidden, info, lash, col_join, mirror_start: if arches.is_some() { CURVE_MIRROR_START } else { MIRROR_START } }
 }
 
 /// Builds one eye's piece on a head.
