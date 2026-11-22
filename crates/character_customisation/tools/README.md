@@ -28,6 +28,20 @@ data first.
   decision 53 say that anything that ships, and anything heavy to compute,
   is written in Rust. These scripts stay until they are ported.
 
+## Working on two features at once
+
+`sliders/serve_feature.sh <feature> <worktree>` gives one conversation a
+viewer, a browser module and a slider data folder of its own, so that two
+conversations in two worktrees do not overwrite each other's work. It takes
+the next free port from 8770 upward, and a stack costs about 50 MB because
+only that feature's own data is copied and the rest are symlinks.
+`build_wasm.sh` takes the worktree as its third argument, or reads
+`KJK_WORKTREE`, so each worktree builds its own module.
+
+The whole flow, including what the HQ commits before the conversations
+start and what it does at merge time, is the section "Working in parallel on
+the head" in `docs/research/2026-11-19-head-roadmap.md`.
+
 ## What is deliberately not here
 
 Three files that viewer 2 reads were left out, because they hold game data

@@ -17,6 +17,7 @@ Read this whole note before working on the head. It is the plan. Then follow the
 - Look at pictures of a result before believing its numbers. Every fault found so far was in the targets or the method, not the sliders.
 - Each step's note goes in the machine's temporary folder while the step runs, and is copied into `docs/research/head-notes/` when the step is finished. The temporary folder is emptied when the machine restarts, so the copy in the repository is the one that lasts. Briefs go in `docs/research/head-briefs/` the same way.
 - Commit the head work onto the branch `character-customisation`, which the draft pull request https://github.com/Superd22/kjk/pull/23 tracks. Change nothing else in the kjk repo unless David asks.
+- If another conversation is working on another feature at the same time, read "Working in parallel on the head" below before you start. It says what the HQ commits first, how to get a viewer, a browser module and a slider data folder of your own, and what happens at merge time.
 - Work that runs builds, tests, clippy, benchmarks, slider solves, renders or the game is done by a full conversation, started by the conversation that leads the area. It is never handed to a sub-agent, because a sub-agent loses its cache after 5 minutes and most of these commands take longer. A conversation launches sub-agents only for work that never waits on a long command: research, judging pictures, code review, quick lookups or a browser check. The user set this on 2026-11-20.
 - A conversation started to do a task does it without asking the user for a go-ahead. It stops for the user only when something goes against its brief, or when a choice would change what is being built. The user set this on 2026-11-21.
 - When your work changes what is done or what comes next, update "Now and next" below.
@@ -99,6 +100,98 @@ Hair is its own part since 2026-11-19. The research is in `2026-11-19-drawn-and-
 1. A prototype with no drawing. Curves and sliders come from small files, the Rust code makes the mesh and the paint, and viewer 2 shows the result.
 2. Reproduce three to five KOTOR hairstyles by hand, then perhaps take the flow from KOTOR's own hair meshes.
 3. Drawing in a viewer or in kjk, once the choice of decision 31 is made.
+
+## Working in parallel on the head
+
+Two or more conversations can work on two different features at the same
+time, each in its own git worktree, and merge back into
+`character-customisation`. This section is how. David asked for it on
+2026-11-22.
+
+The Rust merges cleanly, because each feature owns its own file. The nose
+owns `nose.rs`, `nose_base.rs` and `nose_profile.rs`. The eyes own
+`eyes.rs`, `eye_curves.rs` and the `head_eyes` crate. The jaw, the brow,
+the cheeks, the lips and the skull each own theirs. Two branches only meet
+in a handful of lines of the shared kit, and those are the HQ's to write
+before anyone starts.
+
+What is not in git is the part that needs care. The page a result is judged
+in, the browser module it loads, and the slider data it reads were each a
+single copy until 2026-11-22. `serve_feature.sh` now gives a conversation
+its own copy of all three.
+
+### What the HQ does before the conversations start
+
+Make every change the two features will both need to the shared kit, and
+commit it to `character-customisation` first. Both branches then start from
+it and the merge has nothing to resolve. The shared kit is `lib.rs`,
+`feature.rs` (its `by_key` arm and its `all()` array), `maker.rs`,
+`measure.rs`, `set.rs`, `heads.rs`, `mesh.rs`, `bin/sliders.rs` and
+`head_sliders/Cargo.toml`. The viewer's shared files are `hq/viewer2/`,
+whose `sliders.js` holds one version counter for the whole page: `VER`,
+`SLIDERS_MODULE_VER`, `EYES_MODULE_VER` and `EYE_CURVE_VER`. This is
+AGENT.md's contract-first rule, and it is the only rule that keeps the
+merges small.
+
+### What each conversation does
+
+1. Make a worktree under `.claude/worktrees/` and a branch off
+   `character-customisation`. A build folder for the head crates alone
+   costs between 291 MB and 1.3 GB, so several cost little. Do not build
+   the game there; the head work does not need it.
+2. Run `sliders/serve_feature.sh <feature> <worktree>`. It builds a stack
+   under `hq/parallel/<feature>/` with a slider data folder, a folder for
+   this conversation's browser modules, and a served folder, and it prints
+   every command below with the paths filled in. It takes the next free
+   port from 8770 upward, because David's own viewer holds 8765 and the
+   answers server holds 8766. A stack costs about 50 MB, because only
+   `web/<feature>/` is copied and everything else is a symlink.
+3. Serve it with `python3 -m http.server <port> --bind 127.0.0.1 -d
+   <stack>/served`, and look at the result at
+   `http://127.0.0.1:<port>/viewer2/index.html`.
+4. Solve into the stack's own data folder:
+   `sliders <feature> presets <stack>/data`. The shared inputs stay shared,
+   because they are symlinks. Only this feature's outputs are separate.
+5. Rebuild the browser module into the stack's own folder:
+   `build_wasm.sh head_sliders <stack>/wasm/curve/head_sliders <worktree>`.
+   `build_wasm.sh` takes the worktree as its third argument, or reads
+   `KJK_WORKTREE`. Before 2026-11-22 it was hardcoded to the `head-paint`
+   worktree, which is why parallel work was not possible.
+6. Report to David with pictures from your own port, and say which port it
+   is.
+
+### What the HQ does at merge time
+
+Merging the branches is the easy half. Three things have to happen once, on
+the merged tree, before anyone can judge the result.
+
+1. Copy each feature's `web/<feature>/` from its stack back into
+   `~/.claude/tools/likeness-fit-data/sliders/web/`.
+2. Rerun `sliders all-features starts`. It writes `web/starts_all.bin` from
+   `feature::all()`, and every feature's presets are solved against it, so
+   it has to be made again with both features registered. This is the one
+   data file the branches genuinely share.
+3. Rebuild the browser modules once into the shared `hq/wasm`, and bump the
+   version counters in `hq/viewer2/sliders.js` once.
+
+Then look at both features together in the viewer on 8765, which is the one
+David uses. That reunion is the real cost of working in parallel: a step is
+not done until David has seen it, and only the HQ can show both at once.
+
+### The hazard to know about
+
+The slider data folder is per feature for the brow, the cheeks, the eyes,
+the jaw, the lips and the skull, which each write into their own subfolder
+of `web/`. The nose is the exception: it writes `sliders.json`, `made.bin`
+and `page.json` into the root of `web/`, next to the shared inputs
+`base.bin`, `triangles.bin`, `keep.bin`, `heads.json`, `layout.json` and
+`starts_all.bin`.
+
+So the nose paired with any other feature is safe, because the other
+feature stays in its own subfolder. Two features that both write to that
+root would collide outside git, where no merge can help. Moving the nose's
+outputs into `web/nose/` would remove the asymmetry, and it is the one
+change this section asks for that has not been made.
 
 ## Now and next
 
