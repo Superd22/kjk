@@ -6,7 +6,7 @@
 window.HeadSliders = (function () {
   const D = "/nose/data/";
   // keep these equal to VER, EYES_MODULE_VER, the lash sizes and PROPOSED_EYES in nose.js
-  const VER = "?b=48";
+  const VER = "?b=49";
   const EYES_MODULE_VER = "22";
   // the head_sliders module's own version: 39 adds the fold check (fold_setup, fold_marks, fold_blame); 40 the lid smoother (eyes round 6)
   const SLIDERS_MODULE_VER = "50";
@@ -22,7 +22,7 @@ window.HeadSliders = (function () {
   const EYE_CURVE_VER = "5";
   const MOD_ROOT = "/wasm/curve";
   const FEATURES = [
-    { key: "nose", title: "Nose", sliders: "sliders_r3_nostril.json", page: "page_r3_nostril.json" },
+    { key: "nose", title: "Nose", sliders: "nose/sliders_r3_nostril.json", page: "nose/page_r3_nostril.json" },
     { key: "jaw", title: "Jaw and chin", sliders: "jaw/sliders.json", page: "jaw/page_throat.json" },
     { key: "brow", title: "Brow and forehead", sliders: "brow/sliders.json", page: "brow/page_fold.json" },
     { key: "cheeks", title: "Cheekbones and cheeks", sliders: "cheeks/sliders.json", page: "cheeks/page_curve.json" },

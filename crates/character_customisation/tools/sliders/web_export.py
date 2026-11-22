@@ -1,7 +1,7 @@
 """Copies what the nose page needs from existing data, after nose_bench has run (light work only: reading and cropping files).
 
 - KOTOR's own textured heads, from viewer 2's data, cut down to the part around the nose and put in the frame of the eyes (mm), one
-  file per head in web/kotor/;
+  file per head in web/kotor_<feature>/;
 - our mesh's texture layout (layout v2, the one the KOTOR bakes use) and its drawn triangles, in web/layout.json;
 - a link to viewer 2's textures as web/tex.
 
@@ -26,7 +26,7 @@ def main():
     feature = sys.argv[sys.argv.index("--feature") + 1] if "--feature" in sys.argv else "nose"
     jaw = feature != "nose"
     report = json.load(open(os.path.join(DATA, "sliders", "report.json")))
-    folder = "kotor" if feature == "nose" else "kotor_" + feature
+    folder = "kotor_" + feature
     os.makedirs(os.path.join(WEB, folder), exist_ok=True)
     for h in report["heads"]:
         f = h["frame"]

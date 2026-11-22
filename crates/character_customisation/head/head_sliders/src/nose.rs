@@ -2,7 +2,7 @@
 //! its 14 named sliders.
 
 use crate::V3;
-use crate::feature::{BumpRule, Feature, Files, Measured, OutlineDef, Shot, Spec};
+use crate::feature::{BumpRule, Feature, Measured, OutlineDef, Shot, Spec};
 use crate::measure::{PROPORTIONS, Proportion, Surface, Window, NOSE_WINDOW, measure};
 use crate::mesh::HeadMesh;
 use crate::zone::Zone;
@@ -132,18 +132,6 @@ impl Feature for Nose {
         &SHOTS
     }
 
-    fn files(&self) -> Files {
-        Files {
-            sliders: "web/sliders_r2.json".into(),
-            page: "web/page_r2.json".into(),
-            made: "web/made_r2".into(),
-            report: "report_r2.json".into(),
-            named: "named.json".into(),
-            marks: "marks.json".into(),
-            checks: "nose/checks.json".into(),
-            starts: "web/starts.bin".into(),
-        }
-    }
 }
 
 

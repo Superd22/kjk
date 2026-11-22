@@ -187,11 +187,24 @@ and `page.json` into the root of `web/`, next to the shared inputs
 `base.bin`, `triangles.bin`, `keep.bin`, `heads.json`, `layout.json` and
 `starts_all.bin`.
 
-So the nose paired with any other feature is safe, because the other
-feature stays in its own subfolder. Two features that both write to that
-root would collide outside git, where no merge can help. Moving the nose's
-outputs into `web/nose/` would remove the asymmetry, and it is the one
-change this section asks for that has not been made.
+That asymmetry was removed on 2026-11-22. The nose now writes into
+`web/nose/` like every other feature, because its `files()` override in
+`nose.rs` is gone and it takes the default `web/<key>/` paths. The root of
+`web/` holds only the seven shared inputs: `base.bin`, `triangles.bin`,
+`keep.bin`, `fold_hidden.bin`, `heads.json`, `layout.json` and
+`starts_all.bin`. The nose's KOTOR crops moved from `web/kotor/` to
+`web/kotor_nose/`, so every feature's crops are now `web/kotor_<key>/`,
+and its reports and marks moved out of the folder that holds `input/` into
+`sliders/nose/`.
+
+Round 1 of the nose was written by `nose_bench`, which was deleted on
+2026-11-22, so its data can never be made again. Those four files were kept
+and renamed `web/nose/sliders_r1.json`, `page_r1.json`, `made_r1.bin` and
+`made_r1.json`, so that the default paths cannot overwrite them. The nose
+page still offers them as "Round 1 sliders".
+
+So any two features can now be worked on at the same time without
+colliding outside git.
 
 ## Now and next
 
