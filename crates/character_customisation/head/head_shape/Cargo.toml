@@ -1,0 +1,16 @@
+[package]
+name = "head_shape"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "The last steps of building a customized head's shape, after FLAME and our own controls, such as smoothing the skin."
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]

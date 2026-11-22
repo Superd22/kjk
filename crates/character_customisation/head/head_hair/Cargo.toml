@@ -1,0 +1,23 @@
+[package]
+name = "head_hair"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Hair for customized heads: a hairstyle made from a few curves and sliders, grown as strands through a flow field, and baked into a hair cap, cards and painted hair."
+
+[dependencies]
+head_paint = { path = "../head_paint" }
+image.workspace = true
+base64.workspace = true
+nalgebra.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "make_hair"
+path = "src/bin/make_hair.rs"

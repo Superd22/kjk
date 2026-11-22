@@ -1,0 +1,27 @@
+{
+  "name": "Very short hair (pmba01)",
+  "head": "pmba01",
+  "note": "Written by hand from KOTOR's pmba01: hair cut close to the head, about 6 to 13 mm of volume on top and almost none on the sides, with a high, slightly receding front hairline. It tests very short, tightly coiled hair: a helix of 4 mm period on every strand, no cards, a thin cap with large quads, and most of the look in the painted layer.",
+  "mirror": true,
+  "seed": 21,
+  "colour": { "root": "#070504", "tip": "#1c1410", "painted": "#0c0806", "variation": 0.5 },
+  "hairline": [[0, 26], [30, 24], [48, 14], [62, 4], [78, -6], [95, -16], [115, -26], [140, -36], [180, -42]],
+  "volume": {
+    "base_mm": 2, "taper_mm": 6,
+    "bumps": [ { "az": 0, "el": 62, "radius_deg": 60, "mm": 7 } ]
+  },
+  "length": { "default_mm": 30 },
+  "grid": { "cells": 24, "below_mm": 120 },
+  "strands": 4000,
+  "hold_mm": 1.5,
+  "streams": [
+    { "points": [[180, 70, 0], [0, 85, 0], [0, 50, 0], [0, 26, 0]], "mirror": false },
+    { "points": [[150, 70, 0], [60, 75, 0], [35, 45, 0], [30, 24, 0]] },
+    { "points": [[140, 60, 0], [100, 35, 0], [92, 5, 0], [92, -16, 0]] },
+    { "points": [[180, 62, 0], [180, 20, 0], [180, -20, 0], [180, -42, 0]], "mirror": false },
+    { "points": [[150, 55, 0], [140, 15, 0], [135, -20, 0], [135, -34, 0]] }
+  ],
+  "curl": { "amplitude_mm": 1.5, "period_mm": 4, "ramp_mm": 2 },
+  "cap": { "cell_mm": 34, "fade_mm": 3 },
+  "paint": { "band_mm": 3, "opacity": 0.95 }
+}
