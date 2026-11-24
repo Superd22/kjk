@@ -1,0 +1,33 @@
+[package]
+name = "head_sliders"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Shape sliders for customized heads: each slider is a fixed movement of the vertices, a head is the base head plus its slider values, and a measure of each feature tells whether the sliders can make a KOTOR head's feature."
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[lints]
+workspace = true
+
+[dependencies]
+head_shape = { path = "../head_shape" }
+head_eye_curve = { path = "../head_eye_curve" }
+nalgebra.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+image.workspace = true
+head_eyes = { path = "../head_eyes" }
+head_paint = { path = "../head_paint" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.129"
+
+[[bin]]
+name = "sliders"
+path = "src/bin/sliders.rs"

@@ -1,0 +1,30 @@
+{
+  "name": "Grey hair in a bun (n_daraalah)",
+  "head": "n_daraalah",
+  "note": "Written by hand from KOTOR's n_daraalah: thick grey hair with about 20 mm of volume and a gentle wave, swept back from the forehead and the sides into a bun at the back of the head, about 50 mm out from the scalp. It tests a bun made by the shell's volume, with a ponytail's gather pulling the flow into it, a centre parting at the front, and a heavy volume.",
+  "mirror": true,
+  "seed": 41,
+  "colour": { "root": "#4b4b4f", "tip": "#a4a4a8", "painted": "#5c5c60", "variation": 0.35 },
+  "hairline": [[0, 20], [30, 18], [55, 6], [75, -6], [90, -18], [110, -30], [140, -42], [180, -48]],
+  "volume": {
+    "base_mm": 14, "taper_mm": 12,
+    "bumps": [ { "az": 0, "el": 60, "radius_deg": 50, "mm": 6 }, { "az": 180, "el": 20, "radius_deg": 24, "mm": 34, "mirror": false } ]
+  },
+  "length": { "default_mm": 200 },
+  "grid": { "cells": 24, "below_mm": 140 },
+  "strands": 3500,
+  "partings": [ { "points": [[0, 21], [0, 35], [0, 50]], "mirror": false } ],
+  "streams": [
+    { "points": [[0, 22, 0], [0, 60, 0], [0, 85, 0], [180, 60, 0], [180, 28, 4]], "mirror": false },
+    { "points": [[35, 20, 0], [60, 55, 0], [140, 45, 0], [168, 26, 4]] },
+    { "points": [[80, -8, 0], [110, 10, 0], [150, 20, 4]] },
+    { "points": [[180, -45, 0], [180, -15, 0], [180, 12, 4]], "mirror": false }
+  ],
+  "ponytails": [
+    { "spine": [[180, 18, 0], [180, 26, 0], [180, 34, 0]], "gather_mm": 30, "tightness": 0.6, "mirror": false,
+      "lock": { "cards": 0, "width_mm": [40, 50] } }
+  ],
+  "curl": { "amplitude_mm": 1.5, "period_mm": 25, "wave": true, "ramp_mm": 15 },
+  "cap": { "cell_mm": 20, "fade_mm": 5 },
+  "paint": { "band_mm": 4, "opacity": 0.9 }
+}

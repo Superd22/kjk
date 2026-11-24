@@ -9,3 +9,5 @@
 /design/promo/
 /.claude/launch.json
 THIRD-PARTY-LICENSES.html
+/target-*/
+/crates/character_customisation/tools/viewer-data/

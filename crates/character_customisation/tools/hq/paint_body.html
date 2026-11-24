@@ -1,0 +1,186 @@
+  <section aria-labelledby="goal-title">
+    <h2 id="goal-title">The goal and the test</h2>
+    <p>This page serves roadmap part C, the paint. Our procedural paint must recreate KOTOR's faces at the quality of the mod textures, and not only at the quality of the game's own textures. Carrying KOTOR's texture onto our head, as the viewer does today, only checks the shape. The real test is whether our own paint, computed from the head, matches KOTOR's baked paint pixel for pixel in the same layout.</p>
+    <p>For each part of the face, we fit the paint's settings to each of the 57 KOTOR heads. We then measure three things: the colour difference, the sharpness, and whether each feature is there. We also measure how much of KOTOR's variety in that region the fitted paint keeps, the same way part B does for shapes.</p>
+    <p>These decisions from the roadmap shape the paint.</p>
+    <ul class="facts">
+      <li><strong>Decision 14.</strong> Our head has its own texture, and the paint is baked into it instead of being stored as one colour per vertex, which was blurry.</li>
+      <li><strong>Decision 15.</strong> Paint is its own track, part C, and it runs in parallel with part B.</li>
+      <li><strong>Decision 16.</strong> The quality to aim for is the hand-made mod textures.</li>
+      <li><strong>Decision 17.</strong> Paint may be asymmetric, so the layout must not mirror one half of the face onto the other.</li>
+      <li><strong>Decision 18.</strong> Paint is built from the head's 3D surface and then baked, so it follows the sliders and survives a change of layout.</li>
+      <li><strong>Decision 19.</strong> Our head gets a new layout that gives the face most of the texture.</li>
+      <li><strong>Decision 20.</strong> Whether our paint copies KOTOR's painted-in lighting is decided once we are in the engine.</li>
+      <li><strong>Decisions 22 to 24.</strong> Everything that ships, and every new paint analysis tool, is written in Rust, in the crate <code>head_paint</code>.</li>
+      <li><strong>Decision 26.</strong> The base tone starts from pigment controls such as melanin and haemoglobin, and colours that real skin never has, such as grey-green, stay allowed for aliens and stylised faces.</li>
+      <li><strong>Decision 27.</strong> The depth of KOTOR's painted shading waits for the engine, because the user wants to see the faces there first.</li>
+      <li><strong>Decision 28.</strong> Our own paint only needs our layout. The per-pixel bake that reads KOTOR's texture exists only to make the targets.</li>
+      <li><strong>Decision 29.</strong> The regional tints use about 10 soft regions, each with a left and a right amount that are linked by default.</li>
+      <li><strong>Decision 30.</strong> One control moves the whole face toward colours that skin cannot have, and more controls come only if the fits need them.</li>
+      <li><strong>Decision 31.</strong> The viewer first shows one baked texture of our paint per head with a switch for each layer, and the choice of live editing comes later.</li>
+      <li><strong>Decision 32.</strong> Every mask is computed from the head's shape, with sizes and positions that can be sliders. No mask is painted by hand.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="skin-title">
+    <h2 id="skin-title">What KOTOR's skin varies in</h2>
+    <p>This serves roadmap step C2. A Rust analysis looked at the paint of all 57 heads, baked into our layout. It first took each head's base tone, which is the broad colour of the skin. It then took each head's regional tints, which are how each part of the face differs from that base. The numbers are in CIELAB, a colour space where L is lightness, a is redness and b is yellowness. A delta E is a colour difference, where about 1 is the smallest difference an eye can see.</p>
+    <ul class="facts">
+      <li>The base tone varies the most. Lightness runs from <span class="num">24</span> to <span class="num">81</span>, redness from <span class="num">4.7</span> to <span class="num">27.9</span> and yellowness from <span class="num">7.6</span> to <span class="num">38.9</span>.</li>
+      <li>Two heads differ in base tone by <span class="num">19.8</span> delta E on average.</li>
+      <li>The cheeks and the forehead barely differ between heads. Their tints spread by <span class="num">2.2</span> and <span class="num">3.8</span> delta E. The nose spreads by <span class="num">6.4</span>, and the eyes, brows, mouth, jaw and chin spread by <span class="num">9.2</span> to <span class="num">10.6</span>.</li>
+    </ul>
+    <figure><img src="{{paint_tones}}" alt="The 57 base tones of the KOTOR heads, from darkest to lightest, in three rows."><figcaption>Picture 1. The base tone of each of the 57 heads, from the darkest (<code>mod_hp_pfhb02</code>, lightness 24) to the lightest (<code>pfha05</code>, lightness 81). Each swatch has the head's name and its lightness.</figcaption></figure>
+    <p>Beyond the base tone, the regional tints of the 57 heads form patterns. The three biggest patterns hold <span class="num">30%</span>, <span class="num">15%</span> and <span class="num">9%</span> of the variety. The pictures below show each one added to an average head, and subtracted from it, at two spreads.</p>
+    <ul class="facts">
+      <li>Pattern 1 (30%) is the depth of the painted shading. It darkens or lightens the eye sockets, the brows, the mouth and the nose together. At one spread it changes the lightness around the eyes by <span class="num">9.6</span> points. Decision 27 leaves it for the engine.</li>
+      <li>Pattern 2 (15%) is the beard shadow. At one spread it darkens the chin by <span class="num">9.4</span> lightness points.</li>
+      <li>Pattern 3 (9%) is warm skin against grey-green skin.</li>
+    </ul>
+    <figure><img src="{{paint_patterns}}" alt="An average head with each of the three biggest tint patterns added and subtracted."><figcaption>Picture 2. The three biggest tint patterns, from the front and the side. The left half of each row adds the pattern at two spreads, and the right half subtracts it. Row 1 is the painted shading depth, row 2 the beard shadow and row 3 warm against grey-green.</figcaption></figure>
+    <p>The files are in <code>scratchpad/skin_tone/</code> of the session that ran the analysis: <code>report.json</code>, <code>tones.png</code> and <code>patterns.png</code>.</p>
+  </section>
+
+  <section aria-labelledby="others-title">
+    <h2 id="others-title">How others paint faces</h2>
+    <p>On 19 November we read how games and research make a face's colour from a few settings. The full note, with a link for every claim, is <code>docs/research/2026-11-19-procedural-face-paint.md</code> in the kjk repo. This is what it found.</p>
+    <ul class="facts">
+      <li>There are two ways. One is a stack of masked colour layers, which is what the Bethesda games, Cyberpunk 2077, The Sims 4 and Reallusion SkinGen do. The other computes the skin colour from two pigment amounts, melanin and haemoglobin, which is what Baldur's Gate 3 and the research models of Jimenez and of Alotaibi and Smith do.</li>
+      <li>The pigment model is small enough to implement. Jimenez and colleagues bake all skin colours into a lookup table of two pigment amounts.</li>
+      <li>Regional tints are common. MetaHuman has eight symmetric accent regions, and Skyrim has 14 numbered tint types.</li>
+      <li>Lips, makeup and decals are masked colour layers in every creator the note could read. No source says how a game sharpens or softens a lip border, so that design is ours.</li>
+      <li>No learned colour model can ship in the mod. The Basel Face Model and the FLAME texture spaces are non-commercial, AlbedoMM is academic only, and all of them describe photographed skin, not KOTOR's painted skin.</li>
+      <li>Real skin measurements exist. Xiao and colleagues measured 960 people, and their forehead and cheek lightness is about 56 to 61, with redness about 10.5 to 11.8. That covers no dark African skin, so it sets only the light and medium end.</li>
+    </ul>
+    <p>The note recommends this plan. Build the base tone from two pigment numbers through a lookup table. Put the regional tints on the pigment values as multipliers. Put the lips, makeup and decals on top as masked colour layers. Put pores and age detail on top as a separate layer of 3D noise. Fit the base tone on the low-frequency colour only, because KOTOR's textures have lighting painted into them.</p>
+  </section>
+
+  <section aria-labelledby="layout-title">
+    <h2 id="layout-title">The texture layout</h2>
+    <p>This serves roadmap step C1, and it is done. The old layout filled <span class="num">24%</span> of the texture and gave the lips 4.0 pixels per square millimetre at 2,048 pixels. Bastila's mod texture gives her lips 42. Our paint could not reach mod-texture detail in that layout, so the new layout gives the face most of the texture. It fills <span class="num">72%</span>.</p>
+    <p>The face is one big patch, the skin in front of the ears, flattened in one piece. Everything else is cut into small patches. The face patch is flattened so that no triangle turns over, and the paint's most detailed places get more room. The density at the eyes is 1.5 times the base, and at the nose tip 1.9 times.</p>
+    <figure><img src="{{paint_layout}}" alt="The new layout drawn flat, with one big face patch in the middle and small patches around it."><figcaption>Picture 3. The new layout, flat. The face is the big patch in the middle, coloured by zone. The ears, the scalp, the neck and the hidden skin are the small patches around it.</figcaption></figure>
+    <p>The density went from 3 to 6 pixels per square millimetre to 53 to 84, in every face zone.</p>
+    <div class="board-wrap">
+      <table class="board" style="min-width:0">
+        <thead><tr><th>Zone</th><th>Old, pixels per mm²</th><th>New, pixels per mm²</th></tr></thead>
+        <tbody>
+          <tr><td class="name">Forehead</td><td>4.7</td><td>53.4</td></tr>
+          <tr><td class="name">Brows</td><td>3.1</td><td>83.3</td></tr>
+          <tr><td class="name">Around the eyes</td><td>2.8</td><td>81.9</td></tr>
+          <tr><td class="name">Nose</td><td>2.7</td><td>83.1</td></tr>
+          <tr><td class="name">Cheeks</td><td>4.8</td><td>69.0</td></tr>
+          <tr><td class="name">Mouth</td><td>4.0</td><td>84.3</td></tr>
+          <tr><td class="name">Chin</td><td>4.0</td><td>68.3</td></tr>
+          <tr><td class="name">Jaw</td><td>5.9</td><td>79.1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The forehead is lowest because its upper part, above the hairline, gets less texture on purpose. A checker pattern shows that the cells stay square everywhere on the face, and are larger at the nose and the eyes. The shape distortion of a triangle is 1.34 in the middle, 1.86 at the 90th percentile and 3.5 at the 99th percentile.</p>
+    <figure><img src="{{paint_checker}}" alt="A checker texture on the base head from the front. The squares are small and even over the face."><figcaption>Picture 4. A checker texture on the base head. Every square is the same size in the layout, so the size on the face shows the density.</figcaption></figure>
+    <h3>The seams</h3>
+    <p>The seams sit where they do not show. In the front view no seam crosses the face, the lips, the nose or the brows. The only seams on the face are the lid edges and the lip line, where the skin turns inward, and the outline of the face patch. The cheek's seam lies in front of the ear, and the ears are patches of their own. The seams total these lengths.</p>
+    <ul class="facts">
+      <li>At and above the hairline, <span class="num">321 mm</span>.</li>
+      <li>Behind the cheek, in front of the ear, <span class="num">304 mm</span>, which is 150 mm on each side.</li>
+      <li>Along the underside of the jaw and under the chin, <span class="num">215 mm</span>.</li>
+      <li>Around the lid edges, <span class="num">141 mm</span>.</li>
+      <li>Along the lip line, <span class="num">105 mm</span>.</li>
+    </ul>
+    <figure><img src="{{paint_seams}}" alt="The head from the front, the side, below and behind, with the seams drawn in red."><figcaption>Picture 5. The seams in red, from the front, the side, below and behind.</figcaption></figure>
+    <h3>The vertex count</h3>
+    <p>The head now has <span class="num">5,716</span> vertices instead of 4,750. Every seam splits the vertices along it. The old layout split 197 places, and the new layout splits 1,179, mostly in hidden patches. The face needs seams where the old layout had none, which are the lid edges, the lip line and the jaw's underside. So the layout cannot be a simple re-pack. This matters for roadmap item A4, the vertex budget.</p>
+    <h3>What the first bake shows</h3>
+    <p>The first bake of Bastila's lips is sharper in the new layout. The mean gradient of the lips rises from 1.07 to 1.33, and the variance of the Laplacian rises from 9.8 to 16.4. An earlier version of this page said the gain was small because the bake read KOTOR's paint only at points on our triangles. That was wrong. The Python bake already read the texture at every pixel, so the gain comes from the layout. The bake section below has the pictures.</p>
+    </section>
+
+  <section aria-labelledby="bake-title">
+    <h2 id="bake-title">The per-pixel bake</h2>
+    <!-- bake section -->
+    <p>This serves roadmap step C1, and it is done. The bake takes KOTOR's texture and writes it into our new layout, one pixel at a time, for each of the 57 heads. These textures are the targets that all our procedural paint is measured against.</p>
+    <ul class="facts">
+      <li>The bake is written in Rust, in <code>head_paint</code>. It takes about <span class="num">0.35 s</span> per head, so <span class="num">21 s</span> for all 57 heads. The Python bake took <span class="num">9 to 10 s</span> per head.</li>
+      <li>The Rust bake is not sharper than the Python bake into the new layout. The Python bake was already reading KOTOR's texture at every pixel.</li>
+      <li>The sharpness comes from the new layout. It is now limited by the resolution of KOTOR's own texture. On Bastila's eye, the variance of the Laplacian rose from <span class="num">39.5</span> in the old layout to <span class="num">159</span> in the new one.</li>
+      <li>The flat orange strip between the lips was the hidden faces of the lip slit. The new layout makes them big enough to show, and the bake now darkens them.</li>
+      <li>The viewer uses the new bakes. Its "Paint" menu switches back to the old layout's bake.</li>
+      <li>Grey patches remain where KOTOR has hair, or no skin within 2.5 mm.</li>
+    </ul>
+    <figure><img src="{{paint_bake_eye}}" alt="Bastila's eye baked three ways, on our base head."><figcaption>Picture 6. Bastila's eye on our base head. Left, the old layout. Middle, the Python bake in the new layout. Right, the Rust bake in the new layout. The brow and the skin are much sharper in the new layout, and the two new-layout bakes look alike.</figcaption></figure>
+    <figure><img src="{{paint_bake_lips}}" alt="Bastila's lips baked three ways, on our base head."><figcaption>Picture 7. Bastila's lips, in the same order. In the middle picture, a flat orange strip lies between the lips. In the right picture, the Rust bake has darkened it.</figcaption></figure>
+    <p>The pictures are made by <code>scan/trials-2026-11-18/bake_compare.py</code>.</p>
+  </section>
+
+  <section aria-labelledby="tone-title">
+    <h2 id="tone-title">Base tone from pigments (C2)</h2>
+    <!-- base tone section -->
+    <p>This serves roadmap step C2, part 1, second round. The base tone has five controls: melanin, haemoglobin, colour strength, undertone and unnatural colour. Colour strength multiplies the chroma in Lab and keeps the lightness and hue. The undertone turns the hue by a few degrees, and a negative angle is redder. The unnatural colour turns the hue the same way over the whole wheel, and it is zero for every head.</p>
+    <ul>
+      <li>The first round was fitted to the median colour of the cheeks and forehead. Against that colour our baked tone was not too saturated. The median chroma difference was <span class="num">+0.3</span>, and <span class="num">31</span> of the 57 heads were more saturated than KOTOR.</li>
+      <li>KOTOR's whole face is darker than its cheeks and forehead, because it has painted shading. The median lightness of the whole face is <span class="num">5.0</span> below our tone's, and our tone was lighter on <span class="num">55</span> heads. The whole-face chroma was nearly the same, so the first round's difference was mostly lightness. On the three darkest heads our tone had a chroma of 25 to 36 against KOTOR's 9 to 14.</li>
+      <li>The second round is fitted to the median Lab colour of the whole face. All 57 heads fit to under 0.1 delta E, and the baked colours are within 0.6 of KOTOR's chroma on 90% of the heads.</li>
+    </ul>
+    <p>The ranges of the 57 fits, which will set the slider ranges, are the following.</p>
+    <ul>
+      <li>Colour strength: <span class="num">0.27</span> to <span class="num">1.54</span>, with a median of <span class="num">0.92</span>. The three darkest heads sit at 0.27 to 0.34.</li>
+      <li>Undertone: <span class="num">-30.7</span> to <span class="num">+6.2</span> degrees, with a median of <span class="num">-4.8</span>.</li>
+      <li>Melanin: <span class="num">0.004</span> to <span class="num">0.294</span>. Haemoglobin: <span class="num">0</span> to <span class="num">0.10</span>, and it sits at the top of the table for <span class="num">33</span> heads.</li>
+      <li>No head needs the unnatural colour. When it is allowed, no head gains more than 0.1 delta E.</li>
+    </ul>
+    <p>The viewer's Paint menu offers "Our paint, base tone v2" next to the two first-round choices.</p>
+  </section>
+
+  <section aria-labelledby="shading-title">
+    <h2 id="shading-title">Shading and sheen (C2)</h2>
+    <p>This serves roadmap step C2. Our paint now has three layers: the base tone, the shading and the sheen. The code is in the crate <code>head_paint</code> (<code>src/shading.rs</code>, <code>src/sheen.rs</code>, <code>src/surface.rs</code> and <code>src/paint.rs</code>). The fit is the tool <code>fit_shading</code>, and the bake is <code>paint_heads</code>.</p>
+    <h3>The shading layer</h3>
+    <ul>
+      <li>KOTOR paints no key light and no side light into its faces. Its painted shading is mostly light from a sky above the head that the face's own shape blocks.</li>
+      <li>The layer reads two maps of our fitted head. The first is the sky light: the share of a uniform sky above the head that a point sees past the head's own surface within 25 mm. The second is the bump: how far a point stands out of the surface around it at a 20 mm scale, in millimetres.</li>
+      <li>The maps are computed at each of the head's 4,750 vertices and read at each pixel from the corners of its triangle. They are computed from the head's current shape, so they follow the sliders. Computing them takes about 0.2 s per head.</li>
+      <li>At strength 1 the layer changes the lightness by <span class="num">34</span> L* per unit of sky light and lightens by <span class="num">0.73</span> L* per millimetre that a point stands out. A point with a sky light of <span class="num">0.476</span>, the median of our base head's face, is left unchanged.</li>
+      <li>Where the layer darkens, the skin keeps its chroma. Where it lightens, part of the change is white. That part is the highlight whiteness, which is <span class="num">0.54</span> on every head for now, the median that KOTOR's heads show.</li>
+    </ul>
+    <h3>The sheen layer</h3>
+    <ul>
+      <li>The sheen is a whitish highlight in three regions: along each cheekbone, along the ridge of the nose, and on the chin. Each region has its own amount, in L* at its centre. The three dark heads that showed it each light a different region.</li>
+      <li>Each region's mask is a Gaussian of the distance to landmark vertices of our head. The cheek regions lie along a line under each eye, 21 to 42 mm from the middle, with a width of 12 mm. The nose region lies along the line from the nose's root to its tip, with a width of 6 mm. The chin region lies around one point, with a width of 10 mm.</li>
+      <li>60% of the sheen's lightening is white.</li>
+    </ul>
+    <h3>The joint fit</h3>
+    <ul>
+      <li>The shading strength and the three sheen amounts are fitted together. The fit uses KOTOR's lightness at each vertex with its 15 mm regional mean removed, as in the study, so that beard shadow and redder cheeks do not count as shading.</li>
+      <li>The base tone is then fitted so that our painted face, with every layer on, has the same median colour as KOTOR's face. The face here is the skin outside the lids, the brows, the lips and the hairline. So the base tone is the skin's colour at a typical point of the face, and the shading is not counted twice.</li>
+      <li>A sheen region stays only if it lowers the mean colour difference per pixel between our face and KOTOR's by at least 0.05. Many heads are lighter on the cheekbones than the shading explains, but on most of them a sheen there made the face differ more from KOTOR's.</li>
+    </ul>
+    <h3>Results on the 57 heads</h3>
+    <ul>
+      <li>The fair comparison is a flat base tone fitted to the same median colour. Against it, the mean colour difference per pixel fell from <span class="num">6.88</span> to <span class="num">6.04</span> with the shading and to <span class="num">5.80</span> with the sheen, as medians over the heads. It fell on 54 of the 57 heads. The base tone v2 alone had <span class="num">6.97</span>.</li>
+      <li>The lightness difference per pixel fell from <span class="num">10.6</span> to <span class="num">8.7</span> L* (root mean square, median over the heads).</li>
+      <li>The median lightness error by zone, in L*, went down in six zones and up in one. Around the eyes it went from 5.6 to 4.3, on the chin from 7.4 to 3.2, on the forehead from 4.7 to 3.5, on the jaw from 4.7 to 2.6, and on the cheeks from 3.2 to 2.0. On the mouth it went from 2.3 to 2.1. On the nose it rose from 2.5 to 3.1, because of the nose sheen on seven heads.</li>
+      <li>The shading strength ranges from <span class="num">0</span> (<code>mod_kyle_katarn</code>, whose face is mostly beard) to <span class="num">2.29</span> (<code>p_baodurh</code>), with a median of <span class="num">0.84</span>.</li>
+      <li>The sheen is on 30 heads. The cheeks have it on 24 heads (5 to 33 L*), the nose on 7 heads (8 to 21 L*) and the chin on 5 heads (9 to 23 L*). Of the three dark heads, <code>pfhb04</code> keeps a cheek sheen of 11 L* and <code>pmba01</code> a nose sheen of 10 L*. <code>mod_hp_pfhb02</code> has none, because its chin sheen did not bring the face closer.</li>
+      <li>Three heads are a little further from KOTOR with the new paint than with a flat tone: <code>mod_tcs_bastila</code> (6.81 to 7.14), <code>n_dodonnah</code> (7.12 to 7.25) and <code>pmha02</code> (5.03 to 5.08).</li>
+    </ul>
+    <figure><img src="{{paint_layers}}" alt="Five heads in our texture layout: KOTOR's bake, our base tone v2, our base tone v3 with shading, every layer, and the shading and sheen alone on grey."><figcaption>Picture 8. Five heads in our texture layout, cropped to the face. From the left: KOTOR's bake, our base tone v2, our base tone v3 with the shading, every layer, and the shading and the sheen on a neutral grey skin. <code>pfhb04</code> and <code>old_w_m</code> have a cheek sheen, and <code>pmba01</code> a nose sheen.</figcaption></figure>
+    <h3>In the viewer</h3>
+    <p>Head viewer 2's Skin menu has "Layered (base tone v3, shading and sheen)", which is the default. Under it, three switches turn the base tone, the shading and the sheen on and off. With the base tone off, the other layers are painted on a neutral grey skin. Every combination is baked by the Rust code for every head, 456 textures in about 40 s, and the viewer shows the one that matches the switches. The earlier base tones stay in the menu as they were.</p>
+    <h3>What is still wrong</h3>
+    <ul>
+      <li>KOTOR's painted creases (nasolabial folds, crow's feet and forehead lines), beards, brows, lips and makeup are not painted yet, so the face stays smoother than KOTOR's.</li>
+      <li>A strong nose sheen reads as a white stripe, as on <code>mod_kenobi</code> (19 L*).</li>
+      <li>The highlight whiteness is the same on every head. The study measured 21% to 100% across the heads, but it is not fitted per head yet.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="next-title">
+    <h2 id="next-title">Next</h2>
+    <p>The roadmap's order for the paint, after the work that is running now, is the following.</p>
+    <ol class="facts">
+      <li><strong>Regional tints and the beard shadow (C2).</strong> This is next for the main session. It is done when named tint controls, built from the head's surface, are fitted to every head and shown in the viewer next to KOTOR's paint. The draft finish line is a median broad colour difference under 3 delta E in each region, and at least 85% of KOTOR's variety kept in each region, leaving out KOTOR's painted shading pattern. This line will be revised after the first fits.</li>
+      <li><strong>Paint in the viewer.</strong> Done on 2026-11-19. The viewer shows our head with KOTOR's paint, with our procedural paint, or with no paint, and each layer of our paint switches on and off.</li>
+      <li><strong>The lips (C3).</strong> Lip colour and border sharpness become procedural, the seam between the lips and the skin does not show, and the lips are fitted to the 57 heads. The new layout gives the mouth 84 pixels per square millimetre, which is enough for a crisp border.</li>
+      <li><strong>Teeth and the inside of the mouth.</strong> Our open mouth shows teeth, gums and a dark inside.</li>
+      <li><strong>Brows, facial hair, eye makeup with the lash strip, fine detail and decals.</strong> Each one gets its "done" when the work reaches it.</li>
+    </ol>
+  </section>

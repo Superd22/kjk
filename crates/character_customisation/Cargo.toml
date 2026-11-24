@@ -1,0 +1,15 @@
+[package]
+name = "character_customisation"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Character customisation: the entry point for customized heads and, later, bodies. The parts live in its sub-folders."
+
+[dependencies]
+head_paint = { path = "head/head_paint" }
+head_hair = { path = "head/head_hair" }
+
+[lints]
+workspace = true

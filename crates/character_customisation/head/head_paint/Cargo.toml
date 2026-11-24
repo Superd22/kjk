@@ -1,0 +1,50 @@
+[package]
+name = "head_paint"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+description = "Procedural paint for customized heads: skin, lips, brows, makeup and hair, built from the head's surface and baked into its texture."
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "skin_tone"
+path = "src/bin/skin_tone.rs"
+
+[[bin]]
+name = "kotor_bake"
+path = "src/bin/kotor_bake.rs"
+
+[dependencies]
+image.workspace = true
+base64.workspace = true
+nalgebra.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.129"
+
+[[bin]]
+name = "paint_live"
+path = "src/bin/paint_live.rs"
+
+
+[[bin]]
+name = "fit_base_tone"
+path = "src/bin/fit_base_tone.rs"
+
+[[bin]]
+name = "face_tone"
+path = "src/bin/face_tone.rs"
+
+[[bin]]
+name = "shading_maps"
+path = "src/bin/shading_maps.rs"
+

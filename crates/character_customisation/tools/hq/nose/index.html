@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Head feature sliders</title>
+<link rel="icon" href="data:,">
+<style>
+:root { --bg: #f6f5f2; --panel: #ffffff; --ink: #1f2328; --muted: #5d636b; --line: #d9d6cf; --accent: #2f6db5; --pass: #2e7d4f; --fail: #b3412e; --chip: #eceae5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #16181b; --panel: #1f2226; --ink: #e7e5e0; --muted: #a2a7ad; --line: #34383d; --accent: #6ea8ef; --pass: #5cc489; --fail: #ef7d66; --chip: #2a2e33; } }
+:root[data-theme="dark"] { --bg: #16181b; --panel: #1f2226; --ink: #e7e5e0; --muted: #a2a7ad; --line: #34383d; --accent: #6ea8ef; --pass: #5cc489; --fail: #ef7d66; --chip: #2a2e33; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { padding: 18px 20px 6px; max-width: 1400px; margin: 0 auto; }
+h1 { font-size: 22px; margin: 0 0 6px; }
+h2 { font-size: 18px; margin: 22px 0 8px; }
+h3 { font-size: 15px; margin: 16px 0 6px; }
+p { margin: 6px 0; max-width: 980px; }
+.muted { color: var(--muted); }
+nav { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 0; }
+nav button, .seg button { border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 7px 12px; border-radius: 7px; cursor: pointer; font: inherit; }
+nav button.on, .seg button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+main { max-width: 1400px; margin: 0 auto; padding: 4px 20px 60px; }
+[hidden], section[hidden] { display: none !important; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0; }
+select, input[type=range] { font: inherit; }
+select { padding: 5px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.seg { display: inline-flex; gap: 0; }
+.seg button { border-radius: 0; margin-left: -1px; padding: 5px 10px; }
+.seg button:first-child { border-radius: 6px 0 0 6px; }
+.seg button:last-child { border-radius: 0 6px 6px 0; }
+.wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+.card canvas, .card img { width: 100%; display: block; border-radius: 5px; background: #8c8a86; }
+.card .name { font-size: 13px; font-weight: 600; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .val { font-size: 12px; color: var(--muted); }
+.ends { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin: 4px 0; }
+.note { background: var(--chip); border-radius: 8px; padding: 8px 12px; margin: 8px 0; max-width: 980px; }
+table { border-collapse: collapse; font-size: 13px; margin: 6px 0 12px; }
+td, th { border-bottom: 1px solid var(--line); padding: 4px 8px; text-align: right; }
+td:first-child, th:first-child { text-align: left; }
+.ok { color: var(--pass); } .bad { color: var(--fail); }
+.strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.strip .card { cursor: pointer; padding: 4px; }
+.strip .card.pick { outline: 3px solid var(--accent); }
+.strip .card .val { text-align: center; }
+.live { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; }
+@media (max-width: 900px) { .live { grid-template-columns: 1fr; } .strip { grid-template-columns: repeat(4, 1fr); } }
+#liveCanvas { width: 100%; height: 560px; border-radius: 10px; background: #8c8a86; display: block; touch-action: none; }
+#liveSliders { max-height: 520px; overflow-y: auto; padding-right: 8px; }
+.sliders label { display: block; font-size: 13px; margin-top: 8px; }
+.sliders input { width: 100%; }
+.sliders .row { display: flex; justify-content: space-between; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.pair .lab { font-size: 11px; color: var(--muted); text-align: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.chips span { font-size: 11px; padding: 1px 5px; border-radius: 4px; background: var(--chip); }
+.chips span.bad { color: #fff; background: var(--fail); }
+.chips span.unread { opacity: 0.55; }
+.markrow { margin-top: 6px; }
+.markbar button { padding: 4px 10px; font-size: 13px; }
+.markbar button.on[data-state="same"] { background: var(--pass); border-color: var(--pass); }
+.markbar button.on[data-state="not_same"] { background: var(--fail); border-color: var(--fail); }
+.markbar button.on[data-state="none"] { background: var(--muted); border-color: var(--muted); }
+.made { display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr)); gap: 10px; }
+.words { font-size: 12.5px; margin: 4px 0 0; padding-left: 16px; }
+.big { font-size: 20px; font-weight: 600; }
+.pairs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.sliders h4 { font-size: 14px; margin: 16px 0 2px; padding-bottom: 3px; border-bottom: 1px solid var(--line); }
+.sliders .hint { font-size: 11.5px; color: var(--muted); margin: 1px 0 2px; }
+.cards2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 18px; }
+.cards2 > div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 4px 14px; }
+.askPair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: max(560px, min(1080px, calc((100vh - 460px) * 2))); }
+.askPair canvas { width: 100%; aspect-ratio: 1; border-radius: 10px; background: #8c8a86; display: block; }
+.answers { display: flex; gap: 14px; margin: 14px 0; }
+.answers button { font: inherit; font-size: 20px; font-weight: 600; padding: 14px 36px; border-radius: 10px; border: 1px solid var(--accent); background: var(--panel); color: var(--ink); cursor: pointer; }
+.answers button:hover { background: var(--accent); color: #fff; }
+@media (max-width: 640px) { .cards2 { grid-template-columns: 1fr; } .askPair { gap: 6px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nose, jaw and chin sliders</h1>
+  <p>This page tests the features built the new way. The nose, and the jaw and chin, each have sliders. A feature is measured by its proportions and outlines on KOTOR's own head meshes. The sliders try to make every KOTOR nose, jaw and chin, and the result is shown next to the original.</p>
+  <p class="note"><b>The pass marks are provisional.</b> They were set from how much KOTOR's noses, jaws and chins vary and how much the measure wobbles, not from what you can see. The tab "Same or different nose" asks you one question at a time about the nose. Under "Made against original", every card has a control to mark the nose, or the jaw and chin, as the same as KOTOR's or not the same. Until you have answered or marked, every pass and fail on this page uses the provisional marks.</p>
+  <nav id="tabs">
+    <button data-tab="wall" class="on">1. The wall of KOTOR heads</button>
+    <button data-tab="ask">2. Same or different nose</button>
+    <button data-tab="live">3. Live sliders</button>
+    <button data-tab="made">4. Made against original</button>
+    <button data-tab="strip">5. Noticing strip (earlier answers)</button>
+  </nav>
+</header>
+<main>
+  <section id="wall">
+    <p>All 57 test heads, on KOTOR's own meshes with their own paint, sorted by one measure of the nose, or of the jaw and chin. Each row should run in order. If an order looks wrong to you, the measure is wrong there.</p>
+    <div class="bar">
+      <span class="seg" id="wallFeature"></span>
+      <label>Sort by <select id="wallSort"></select></label>
+      <label><input type="checkbox" id="wallMarks" checked> Show what the measure finds</label>
+      <span class="muted" id="wallNote"></span>
+    </div>
+    <div class="ends"><span id="wallLow"></span><span id="wallHigh"></span></div>
+    <div class="wall" id="wallGrid"></div>
+    <div id="wallNose"><h2>Proving the measure</h2>
+    <div id="checks"></div></div>
+    <div id="wallJaw" hidden></div>
+  </section>
+
+  <section id="ask" hidden>
+    <p class="note">Two noses are shown side by side, on the same head and from the same camera. Say whether they look like the same nose or two different noses. There is no right answer, and your first impression is what counts.</p>
+    <div class="bar"><span class="big" id="askProgress">Loading the first question.</span><span class="muted" id="askSaved"></span></div>
+    <div id="askBox">
+      <div class="askPair"><canvas id="askA"></canvas><canvas id="askB"></canvas></div>
+      <div class="answers"><button id="askSame">Same nose</button><button id="askDiff">Different nose</button></div>
+      <div class="bar"><span class="seg" id="askView"></span><span class="muted">You can turn both noses to another view with these buttons or the keys 1 to 4. Turning them does not count as an answer. The key S answers "Same nose" and the key D answers "Different nose".</span></div>
+      <div class="bar"><button id="askStop" class="seg">Stop for now</button></div>
+    </div>
+    <div class="bar"><button id="askResume" class="seg" hidden>Go on with the questions</button><button id="askMore" class="seg" hidden>Ask 72 more questions</button></div>
+    <h3>Pass marks</h3>
+    <div id="askMarks"></div>
+  </section>
+
+  <section id="strip" hidden>
+    <p>This was the first way to set the pass marks, with round 1's measure. It is kept with its answers as a record. The tab "Same or different nose" replaces it.</p>
+    <p>The base head's nose changes in 10 even steps along one measure, while the other proportions stay where they are. Step 0 is the base head. Click the first step where you see that the nose differs from step 0. That step becomes the pass mark for that measure.</p>
+    <div class="bar">
+      <label>Measure <select id="stripKey"></select></label>
+      <span class="seg" id="stripView"></span>
+      <button id="stripNone" class="seg">I see no difference at all</button>
+      <span id="stripSaved" class="muted"></span>
+    </div>
+    <div class="strip" id="stripGrid"></div>
+    <p class="muted" id="stripInfo"></p>
+    <h3>Your answers</h3>
+    <div id="stripAnswers"></div>
+  </section>
+
+  <section id="live" hidden>
+    <div class="live">
+      <div>
+        <canvas id="liveCanvas"></canvas>
+        <div class="bar">
+          <span class="seg" id="liveCams"></span>
+          <span class="seg" id="liveFocus" title="Which feature the camera looks at"></span>
+          <span class="seg" id="livePaint"></span>
+          <label><input type="checkbox" id="liveKotor"> KOTOR's head from the same preset</label>
+          <span class="muted" id="liveTime"></span>
+        </div>
+        <div class="bar" id="liveEyesBar" hidden>
+          <span>Lid</span><span class="seg" id="liveLid"></span>
+          <button id="liveProposed" class="seg" title="Sets the eyeball's radius to 13.3 mm, the value proposed as the default for every head. The other eye sliders keep their values.">Proposed default eyes</button>
+          <button id="liveDefault" class="seg">Default</button>
+        </div>
+        <canvas id="liveKotorCanvas" hidden style="width:300px;height:300px;border-radius:8px"></canvas>
+        <p class="note" id="liveNote"></p>
+        <div id="liveMeasure"></div>
+      </div>
+      <div>
+        <div class="bar"><span class="seg" id="liveRound"></span></div>
+        <label>Head <select id="liveHead"></select></label>
+        <div class="bar">
+          <button id="liveSolved" class="seg">Load this head's solved values</button>
+          <button id="liveReset" class="seg">Reset to the base head</button>
+        </div>
+        <div class="sliders" id="liveSliders"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="made" hidden>
+    <div class="bar"><span class="seg" id="madeFeature"></span></div>
+    <p id="madeIntro"></p>
+    <div id="madeScore"></div>
+    <h2 id="madeTitle">The noses, one card per head</h2>
+    <div class="bar">
+      <span class="seg" id="madeRound"></span>
+      <label>Sliders <select id="madeCount"></select></label>
+      <span class="seg" id="madeMode"></span>
+      <span class="seg" id="madeView"></span>
+      <span class="seg" id="madePaint"></span>
+      <span class="seg" id="madeLid" hidden></span>
+      <label>Find <input id="madeFind" placeholder="a name, for example Carth" style="font:inherit;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink)"></label>
+    </div>
+    <div id="madeNow"></div>
+    <div class="made" id="madeGrid"></div>
+    <p class="muted" id="marksSaved"></p>
+    <div id="marksSummary"></div>
+    <div id="variety"></div>
+  </section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script type="module" src="nose.js?v=42"></script>
+</body>
+</html>

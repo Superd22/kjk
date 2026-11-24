@@ -1,0 +1,551 @@
+<title>Likeness HQ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column. The goal and pass mark, then the road of steps as a board, then the face's zone scores drawn to scale, then the zones one by one, then one section per step. */
+:root {
+  --bg: #f3f4f2;
+  --panel: #ffffff;
+  --ink: #1c211f;
+  --muted: #5b6460;
+  --line: #d9ddd9;
+  --accent: #2f6d5f;
+  --good: #2e7d4f;
+  --good-bg: #e2f1e7;
+  --part: #a8670c;
+  --part-bg: #f7ead3;
+  --weak: #b23a2e;
+  --weak-bg: #f6e0dd;
+  --none: #6c7470;
+  --none-bg: #e7e9e7;
+  --wait: #4d5ea8;
+  --wait-bg: #e3e7f6;
+  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141816; --panel: #1c211f; --ink: #e6e9e7; --muted: #9aa39f; --line: #2f3633; --accent: #7cc3b0;
+    --good: #7fd19c; --good-bg: #1f3428; --part: #e9b45f; --part-bg: #3a2e19; --weak: #f08a7d; --weak-bg: #3c2220; --none: #a3aba7; --none-bg: #262c29;
+    --wait: #9fb0f0; --wait-bg: #232a44;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141816; --panel: #1c211f; --ink: #e6e9e7; --muted: #9aa39f; --line: #2f3633; --accent: #7cc3b0;
+  --good: #7fd19c; --good-bg: #1f3428; --part: #e9b45f; --part-bg: #3a2e19; --weak: #f08a7d; --weak-bg: #3c2220; --none: #a3aba7; --none-bg: #262c29;
+  --wait: #9fb0f0; --wait-bg: #232a44;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 48px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(34px, 6vw, 54px); line-height: 1.05; letter-spacing: -0.01em; }
+h2 { font-size: 28px; line-height: 1.15; }
+h3 { font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+.lede { display: grid; gap: 16px; }
+.eyebrow { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.04em; }
+.goal { border-left: 3px solid var(--accent); padding-left: 16px; display: grid; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12.5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.good { color: var(--good); background: var(--good-bg); }
+.part { color: var(--part); background: var(--part-bg); }
+.weak { color: var(--weak); background: var(--weak-bg); }
+.none { color: var(--none); background: var(--none-bg); }
+.wait { color: var(--wait); background: var(--wait-bg); }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 15px; color: var(--muted); }
+.legend span.item { display: inline-flex; gap: 8px; align-items: center; }
+.block { display: grid; gap: 16px; }
+.board-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table.board { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15.5px; }
+.board th, .board td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.board th { font-family: var(--display); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.board tr:last-child td { border-bottom: 0; }
+.board td.step { font-family: var(--mono); color: var(--muted); width: 2.5em; }
+.board td a { color: var(--ink); font-family: var(--display); font-weight: 700; text-decoration: none; }
+.board td a:hover, .board td a:focus-visible { color: var(--accent); text-decoration: underline; }
+.board td.note { color: var(--muted); }
+.board tr.now td { background: var(--wait-bg); }
+section.step { display: grid; gap: 20px; padding-top: 32px; border-top: 1px solid var(--line); scroll-margin-top: 16px; }
+.step-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: baseline; justify-content: space-between; }
+.step-head h2 span { font-family: var(--mono); font-size: 0.6em; color: var(--muted); font-weight: 500; margin-right: 10px; }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+@media (max-width: 820px) { .cols { grid-template-columns: 1fr; } }
+.cols > div { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.cols ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 16px; }
+.num { font-family: var(--mono); font-size: 0.92em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+figure { margin: 0; display: grid; gap: 8px; }
+figure img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+figcaption { font-size: 15px; color: var(--muted); max-width: 72ch; }
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+footer { color: var(--muted); font-size: 15px; display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 24px; }
+code { font-family: var(--mono); font-size: 0.88em; overflow-wrap: anywhere; }
+
+/* the zone chart: one row per zone, a bar for the mean and a tick for the 95th percentile, on one scale from 0 to 2 mm (1 mm is 50%) */
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 10px; }
+.chart-row, .axis { display: grid; grid-template-columns: 9.5em minmax(0, 1fr) 7.5em; gap: 12px; align-items: center; }
+.chart-row { font-size: 15px; }
+@media (max-width: 560px) { .chart-row, .axis { grid-template-columns: 6.5em minmax(0, 1fr) 6.2em; } .chart-row { font-size: 13.5px; } }
+.chart-row .label { font-family: var(--display); font-weight: 700; }
+.chart-row .val { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; }
+.track { position: relative; height: 18px; }
+.bar { position: absolute; left: 0; top: 3px; height: 12px; border-radius: 3px; }
+.bar.pass { background: var(--good); }
+.bar.close { background: var(--part); }
+.bar.fail { background: var(--weak); }
+.p95 { position: absolute; top: 0; width: 2px; height: 18px; background: var(--ink); opacity: 0.55; }
+.mark { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 1px dashed var(--muted); }
+.axis { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.axis .ticks { position: relative; height: 16px; }
+.axis .ticks span { position: absolute; transform: translateX(-50%); }
+.axis .ticks span.first { transform: none; }
+.axis .ticks span.last { transform: translateX(-100%); }
+.chart-key { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
+.chart-key i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+
+/* the zones section: three figures per zone, and the proportion lines */
+.zone { display: grid; gap: 20px; padding-top: 32px; border-top: 1px solid var(--line); scroll-margin-top: 16px; }
+.zstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .zstats { grid-template-columns: 1fr; } }
+.zstats > div { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
+.zstats .k { font-family: var(--display); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.zstats .v { font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums; }
+.zstats .w { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 16px; max-width: 68ch; }
+</style>
+
+<div class="wrap">
+  <header class="lede">
+    <div class="eyebrow">kjk head customization · status on 19 November 2026</div>
+    <h1>Likeness HQ</h1>
+    <p>This page shows how far our head system is from reproducing the human heads of KOTOR 1 and 2, and every step that is still ahead. It is updated after each session of face work.</p>
+    <div class="goal">
+      <p><strong>The goal.</strong> Our head is the FLAME head model, plus controls we add to it. It must reproduce every human head in KOTOR 1 and 2, in KOTOR's style. Then players must be able to edit it through sliders that are easy to use.</p>
+      <p>Only 3D heads are used as tests now, not photos. The test set is 57 heads: 45 heads from the games, plus Kreia and Bastila, and 12 heads from mods. Random slider settings are not used as tests. The values that the 57 fits use will set each slider's range later.</p>
+      <p><strong>The pass mark.</strong> A head passes when three things are true. The whole face lies within 0.5 mm of the KOTOR head on average. No zone of the face is worse than 0.75 mm. And our head is closer to its own KOTOR head than to any other. The mark may be tightened later if the heads still do not look right.</p>
+      <p><strong>The final judge.</strong> A head is only done when you judge it feature by feature in the kjk engine, with our head wearing the character's own KOTOR texture. The pictures on this page come from our test renderer, so they only check the method.</p>
+    </div>
+    <div class="legend" aria-label="What the states mean">
+      <span class="item"><span class="pill good">Done</span> finished and checked</span>
+      <span class="item"><span class="pill wait">Now</span> the step we are on</span>
+      <span class="item"><span class="pill weak">Paused</span> started, then put aside on purpose</span>
+      <span class="item"><span class="pill none">Not yet</span> not started</span>
+    </div>
+  </header>
+
+  <section class="block" aria-labelledby="road-title">
+    <h2 id="road-title">The road</h2>
+    <p>The steps run in this order. Each one has its own section further down. The state of each face zone has its own section too, called <a href="#zones-detail">Zones</a>.</p>
+    <div class="board-wrap">
+      <table class="board">
+        <thead><tr><th>Step</th><th>What it is</th><th>State</th><th>Where it stands</th></tr></thead>
+        <tbody>
+          <tr><td class="step">1</td><td><a href="#targets">The KOTOR test heads</a></td><td><span class="pill good">Done</span></td><td class="note">57 heads are wrapped, with our lid edge placed on KOTOR's eye slit.</td></tr>
+          <tr><td class="step">2</td><td><a href="#method">A fit we can trust</a></td><td><span class="pill good">Done</span></td><td class="note">The fit finds heads made by FLAME's own sliders to within <span class="num">0.013 mm</span>.</td></tr>
+          <tr><td class="step">3</td><td><a href="#eyes">Eye openings, blink and lashes</a></td><td><span class="pill weak">Paused</span></td><td class="note">Openings and blink work on all 57 heads. The lid paint and the lash strip wait until the face is done.</td></tr>
+          <tr class="now"><td class="step">4</td><td><a href="#cranium">Holding the skull</a></td><td><span class="pill wait">Now</span></td><td class="note">Tested on older targets. It must be merged into the fit and run on the 57 heads.</td></tr>
+          <tr class="now"><td class="step">5</td><td><a href="#face">The face to the pass mark</a></td><td><span class="pill wait">Now</span></td><td class="note">No head passes yet. The face is at <span class="num">0.64 mm</span>, and the forehead, brows, chin and jaw fail.</td></tr>
+          <tr><td class="step">6</td><td><a href="#sheet">A feature sheet for you to judge</a></td><td><span class="pill none">Not yet</span></td><td class="note">Made once steps 4 and 5 move the numbers.</td></tr>
+          <tr><td class="step">7</td><td><a href="#engine">The proof in the engine</a></td><td><span class="pill none">Not yet</span></td><td class="note">Our fitted head exported as a KOTOR model, next to the original in kjk.</td></tr>
+          <tr><td class="step">8</td><td><a href="#sliders">From fits to sliders</a></td><td><span class="pill none">Not yet</span></td><td class="note">Slider ranges taken from the 57 fits, fewer vertices, and a name for each slider.</td></tr>
+          <tr><td class="step">9</td><td><a href="#editor">The character editor</a></td><td><span class="pill none">Not yet</span></td><td class="note">The sliders in kjk's character creation.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="zones-title">
+    <h2 id="zones-title">How close the face is, zone by zone</h2>
+    <p>Each bar is the mean distance from our fitted head to the KOTOR head over the 57 heads, in millimetres. The dark tick marks the 95th percentile, which shows the worst spots that a good mean can hide. The dashed line is the pass mark: 0.5 mm for the whole face and 0.75 mm for each zone. These numbers are for FLAME with the eye opening controls.</p>
+    <div class="chart" role="img" aria-label="Mean distance per zone in millimetres: whole face 0.64, mouth 0.46, nose 0.55, around the eyes 0.64, cheeks 0.77, chin 0.78, jaw 0.80, brows 0.81, forehead 1.08.">
+      <div class="chart-row"><span class="label">Whole face</span><div class="track"><div class="mark" style="left:25%"></div><div class="bar close" style="width:32%"></div><div class="p95" style="left:65.5%"></div></div><span class="val">0.64 · 1.31</span></div>
+      <div class="chart-row"><span class="label">Mouth</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar pass" style="width:23%"></div><div class="p95" style="left:45%"></div></div><span class="val">0.46 · 0.90</span></div>
+      <div class="chart-row"><span class="label">Nose</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar pass" style="width:27.5%"></div><div class="p95" style="left:54.5%"></div></div><span class="val">0.55 · 1.09</span></div>
+      <div class="chart-row"><span class="label">Around the eyes</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar pass" style="width:32%"></div><div class="p95" style="left:68.5%"></div></div><span class="val">0.64 · 1.37</span></div>
+      <div class="chart-row"><span class="label">Cheeks</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar close" style="width:38.5%"></div><div class="p95" style="left:63%"></div></div><span class="val">0.77 · 1.26</span></div>
+      <div class="chart-row"><span class="label">Chin</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar close" style="width:39%"></div><div class="p95" style="left:65.5%"></div></div><span class="val">0.78 · 1.31</span></div>
+      <div class="chart-row"><span class="label">Jaw</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar close" style="width:40%"></div><div class="p95" style="left:67%"></div></div><span class="val">0.80 · 1.34</span></div>
+      <div class="chart-row"><span class="label">Brows</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar close" style="width:40.5%"></div><div class="p95" style="left:67%"></div></div><span class="val">0.81 · 1.34</span></div>
+      <div class="chart-row"><span class="label">Forehead</span><div class="track"><div class="mark" style="left:37.5%"></div><div class="bar fail" style="width:54%"></div><div class="p95" style="left:93%"></div></div><span class="val">1.08 · 1.86</span></div>
+      <div class="axis" aria-hidden="true"><span></span><div class="ticks"><span class="first" style="left:0">0</span><span style="left:25%">0.5</span><span style="left:37.5%">0.75</span><span style="left:50%">1</span><span style="left:75%">1.5</span><span class="last" style="left:100%">2 mm</span></div><span></span></div>
+      <div class="chart-key"><span><i style="background:var(--good)"></i>within the pass mark</span><span><i style="background:var(--part)"></i>up to 0.15 mm over it</span><span><i style="background:var(--weak)"></i>far over it</span><span>On the right: the mean, then the 95th percentile.</span></div>
+    </div>
+    <p>On average only the forehead is far from its mark. But no single head passes. None has its whole face within 0.5 mm, and only 2 of the 57 have every zone within 0.75 mm. KOTOR models the hair as part of the skull, so the forehead's score includes hair. Step 4 deals with that. The <a href="#zones-detail">Zones section</a> below goes through each zone in turn.</p>
+  </section>
+
+  <!--ZONES-->
+  <section class="block" id="zones-detail" aria-labelledby="zd-title">
+    <h2 id="zd-title">Zones</h2>
+    <p>This section has one part for each zone of the face. Each part gives a verdict on one question. Do our sliders reproduce this zone on the KOTOR heads? A zone is reproduced when its mean distance is within the mark of <span class="num">0.75 mm</span>, and when most of the 57 heads are within it too. A zone is close when its mean is within <span class="num">0.15 mm</span> of the mark. Otherwise it is not reproduced.</p>
+    <p>The numbers are the mean and the 95th percentile over the 57 heads, as in the chart above. The first value is for FLAME with the eye opening controls, which is the current state. The second value is for FLAME alone. A proportion is how much longer a part is on our head than on KOTOR's, in millimetres. A negative value means ours is shorter.</p>
+    <p>Jump to: <a href="#zone-forehead">forehead</a> <a href="#zone-brows">brows</a> <a href="#zone-eyes">around the eyes</a> <a href="#zone-nose">nose</a> <a href="#zone-cheeks">cheeks</a> <a href="#zone-mouth">mouth</a> <a href="#zone-chin">chin</a> <a href="#zone-jaw">jaw</a>.</p>
+  </section>
+  <section class="zone" id="zone-forehead">
+    <div class="step-head"><h2>Forehead</h2><span class="pill weak">Not reproduced</span></div>
+    <p>The forehead is the one zone that is far from the pass mark. KOTOR models hair as part of the skull, so the forehead's score includes hair that our bare head does not have.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">1.08 mm</span><span class="w">FLAME alone 1.08 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.86 mm</span><span class="w">FLAME alone 1.89 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">3 of 57</span><span class="w">FLAME alone 1 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>mod_kenobi</code> <span class="num">2.01</span>, <code>pmhc04</code> <span class="num">1.96</span>, <code>old_a_m</code> <span class="num">1.39</span>, in millimetres.</p>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>A test of step 4 holds our upper skull in a band just under KOTOR's outer surface, hair included. On the older targets it brought FLAME's skull from <span class="num">2.42 mm</span> off to <span class="num">0.32 mm</span>.</li>
+        <li>Three of the 57 heads are within the zone mark, against one with FLAME alone.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>It is not part of the fit yet, and it has not run on the current targets.</li>
+        <li>On the older targets, the face's score moved from <span class="num">0.68 mm</span> to <span class="num">0.74 mm</span> when the skull was held.</li>
+        <li>Kreia, <code>mod_hp_pfha01</code> and <code>mod_hp_pfhb02</code> have hair panels and no skull.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>Merge the skull hold into the fit as an option, with a switch for each head.</li>
+        <li>Switch it off for Kreia and <code>mod_hp_pfhb02</code>.</li>
+        <li>Run it on the 57 heads and read the forehead score again.</li>
+      </ul></div>
+    </div>
+  </section>
+  <section class="zone" id="zone-brows">
+    <div class="step-head"><h2>Brows</h2><span class="pill part">Close</span></div>
+    <p>The brows are about <span class="num">0.06 mm</span> over the zone mark on average. Fewer than half of the heads are within it.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.81 mm</span><span class="w">FLAME alone 0.81 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.34 mm</span><span class="w">FLAME alone 1.36 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">23 of 57</span><span class="w">FLAME alone 19 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>pmhc04</code> <span class="num">1.21</span>, <code>n_mastkavarh</code> <span class="num">1.01</span>, <code>mod_kenobi</code> <span class="num">1.01</span>, in millimetres.</p>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The eye opening controls moved the number of heads within the mark from 19 to 23.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>The brows are the worst of the zones that are close. 34 of the 57 heads are over the mark, and the worst head is <code>pmhc04</code>.</li>
+        <li>On the feature sheet, the fit slid the brow peak vertex up to <span class="num">2.9 mm</span> along the surface on Carth, which moves the paint with it.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>After step 4, learn new shapes from what FLAME leaves over on the KOTOR heads, which is about <span class="num">0.6 mm</span>. Test each learned shape on heads it was not learned from.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{pic_brows}}" alt="The brows cut from the feature sheet, with KOTOR's head on the left and the FLAME fit on the right.">
+      <figcaption>Picture 2. Carth's brows, with KOTOR's head on the left and our FLAME fit on the right. This sheet was made before the eye opening controls existed, so the eyes show the old fixed opening.</figcaption>
+    </figure>
+  </section>
+  <section class="zone" id="zone-eyes">
+    <div class="step-head"><h2>Around the eyes</h2><span class="pill good">Reproduced</span></div>
+    <p>The shape around the eyes now passes the zone mark on 51 of the 57 heads. This verdict is about the shape only. The paint on the closing lid and the lash strip are still missing, as the lists below say.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.64 mm</span><span class="w">FLAME alone 0.89 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.37 mm</span><span class="w">FLAME alone 2.65 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">51 of 57</span><span class="w">FLAME alone 7 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>pmhc03</code> <span class="num">0.87</span>, <code>sith_app</code> <span class="num">0.82</span>, <code>n_traskh</code> <span class="num">0.80</span>, in millimetres.</p>
+    <ul class="plain">
+      <li>On average our eye centres apart is <span class="num">0.15 mm</span> longer than KOTOR's. The typical head differs by <span class="num">0.16 mm</span>, in either direction. Our eye centres apart is larger on 29 of the 57 heads that have this measure.</li>
+    </ul>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>Each eye has 26 new controls for the opening's width, its place sideways, and the height and depth of the lid edge at seven stops along the lids.</li>
+        <li>Our lid edge now lies <span class="num">0.87 mm</span> from KOTOR's slit on average, against <span class="num">5.85 mm</span> with FLAME alone. The opening's height is <span class="num">0.07 mm</span> off.</li>
+        <li>The blink is computed on each head from its own lid edges. All 57 heads close with less than <span class="num">1 mm</span> left between the lids.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>A closing lid shows the liner and lash paint taken from the open lid, so it looks smeared and dark. This is worst on Bastila, <code>pfha02</code> and Meetra.</li>
+        <li>The lash strip does not exist yet. Bastila's and Kreia's lower liner shows doubled, and Bastila's liner wing cannot be made.</li>
+        <li>The inner corner's depth controls hit their limit on 31 to 36 of the 57 heads. The sideways controls hit their limit on 10 to 13 heads.</li>
+        <li>The opening is still about <span class="num">1 mm</span> narrow on average, because both corners stop about 1 mm short of KOTOR's.</li>
+        <li>On <code>mod_hp_pfha01</code> our lid edge lies <span class="num">7.18 mm</span> from KOTOR's slit. The next worst head is <span class="num">2.1 mm</span> off, so this target may be faulty.</li>
+        <li>A small dent shows above the outer corner when the eye closes.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>Paint the lid skin with plain skin from above the eye.</li>
+        <li>Build the lash strip, a thin strip on the lid edge that carries the lashes and the liner, with its own sliders outside FLAME.</li>
+        <li>Widen the ranges of the depth and sideways controls, and check the target of <code>mod_hp_pfha01</code>.</li>
+        <li>Fix the dent above the outer corner.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{pic_eyes}}" alt="The around the eyes cut from the feature sheet, with KOTOR's head on the left and the FLAME fit on the right.">
+      <figcaption>Picture 3. Bastila's around the eyes, with KOTOR's head on the left and our FLAME fit on the right. This sheet was made before the eye opening controls existed, so the eyes show the old fixed opening.</figcaption>
+    </figure>
+  </section>
+  <section class="zone" id="zone-nose">
+    <div class="step-head"><h2>Nose</h2><span class="pill good">Reproduced</span></div>
+    <p>The nose passes the zone mark on 56 of the 57 heads.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.55 mm</span><span class="w">FLAME alone 0.57 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.09 mm</span><span class="w">FLAME alone 1.17 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">56 of 57</span><span class="w">FLAME alone 55 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>pmhc04</code> <span class="num">0.75</span>, <code>p_joleeh</code> <span class="num">0.67</span>, <code>sith_app</code> <span class="num">0.66</span>, in millimetres.</p>
+    <ul class="plain">
+      <li>On average our nose width is <span class="num">0.10 mm</span> shorter than KOTOR's. The typical head differs by <span class="num">0.31 mm</span>, in either direction. Our nose width is larger on 23 of the 57 heads that have this measure.</li>
+      <li>On average our nose height is <span class="num">0.35 mm</span> shorter than KOTOR's. The typical head differs by <span class="num">0.54 mm</span>, in either direction. Our nose height is larger on 15 of the 57 heads that have this measure.</li>
+      <li>On average our nose length is <span class="num">0.29 mm</span> shorter than KOTOR's. The typical head differs by <span class="num">0.40 mm</span>, in either direction. Our nose length is larger on 13 of the 57 heads that have this measure.</li>
+    </ul>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The nose is within the zone mark on 56 of the 57 heads, with FLAME alone on 55.</li>
+        <li>The nose width is within about <span class="num">0.3 mm</span> on a typical head.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>Our nose is shorter than KOTOR's on average, and its height is off by about <span class="num">0.5 mm</span> for a typical head, as the proportions above show.</li>
+        <li>The worst head, <code>pmhc04</code>, sits right at the mark of <span class="num">0.75 mm</span>.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>No nose-specific work is planned. The nose is checked again when the shapes learned in step 5 are tested.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{pic_nose}}" alt="The nose cut from the feature sheet, with KOTOR's head on the left and the FLAME fit on the right.">
+      <figcaption>Picture 4. Bastila's nose, with KOTOR's head on the left and our FLAME fit on the right. This sheet was made before the eye opening controls existed, so the eyes show the old fixed opening.</figcaption>
+    </figure>
+  </section>
+  <section class="zone" id="zone-cheeks">
+    <div class="step-head"><h2>Cheeks</h2><span class="pill part">Close</span></div>
+    <p>The cheeks are about <span class="num">0.02 mm</span> over the zone mark on average, and the eye opening controls did not help them.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.77 mm</span><span class="w">FLAME alone 0.77 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.26 mm</span><span class="w">FLAME alone 1.27 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">19 of 57</span><span class="w">FLAME alone 23 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>p_baodurh</code> <span class="num">0.87</span>, <code>pmhc04</code> <span class="num">0.87</span>, <code>n_zherronh</code> <span class="num">0.87</span>, in millimetres.</p>
+    <ul class="plain">
+      <li>On average our cheekbone width is <span class="num">0.00 mm</span> longer than KOTOR's. The typical head differs by <span class="num">0.48 mm</span>, in either direction. Our cheekbone width is larger on 22 of the 54 heads that have this measure.</li>
+    </ul>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The cheekbone width is right on average. The mean difference is <span class="num">0.00 mm</span>.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>Only 19 of the 57 heads are within the mark, against 23 with FLAME alone. The eye opening controls moved the cheeks a little the wrong way.</li>
+        <li>The typical cheekbone width differs by about <span class="num">0.5 mm</span>, in either direction.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>After step 4, learn new shapes from what FLAME leaves over on the KOTOR heads, and test them on heads they were not learned from.</li>
+      </ul></div>
+    </div>
+  </section>
+  <section class="zone" id="zone-mouth">
+    <div class="step-head"><h2>Mouth</h2><span class="pill good">Reproduced</span></div>
+    <p>The mouth is the best zone. It passes on 56 of the 57 heads.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.46 mm</span><span class="w">FLAME alone 0.48 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">0.90 mm</span><span class="w">FLAME alone 0.94 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">56 of 57</span><span class="w">FLAME alone 57 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>pmhc04</code> <span class="num">0.75</span>, <code>p_joleeh</code> <span class="num">0.64</span>, <code>n_zezkaiellh</code> <span class="num">0.64</span>, in millimetres.</p>
+    <ul class="plain">
+      <li>On average our mouth width is <span class="num">0.05 mm</span> shorter than KOTOR's. The typical head differs by <span class="num">0.27 mm</span>, in either direction. Our mouth width is larger on 21 of the 57 heads that have this measure.</li>
+      <li>On average our upper lip height is <span class="num">0.24 mm</span> longer than KOTOR's. The typical head differs by <span class="num">0.50 mm</span>, in either direction. Our upper lip height is larger on 35 of the 57 heads that have this measure.</li>
+    </ul>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The mouth is within the zone mark on 56 of the 57 heads, and on all 57 with FLAME alone.</li>
+        <li>The mouth width is right on average and within about <span class="num">0.3 mm</span> on a typical head.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>Our upper lip is taller than KOTOR's on 35 of the 57 heads, and a typical head differs by <span class="num">0.50 mm</span>.</li>
+        <li>With the eye opening controls, one head (<code>pmhc04</code>) sits at the mark of <span class="num">0.75 mm</span>.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>No mouth-specific work is planned. The mouth is checked again when the shapes learned in step 5 are tested.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{pic_mouth}}" alt="The mouth cut from the feature sheet, with KOTOR's head on the left and the FLAME fit on the right.">
+      <figcaption>Picture 5. Bastila's mouth, with KOTOR's head on the left and our FLAME fit on the right. This sheet was made before the eye opening controls existed, so the eyes show the old fixed opening.</figcaption>
+    </figure>
+  </section>
+  <section class="zone" id="zone-chin">
+    <div class="step-head"><h2>Chin</h2><span class="pill part">Close</span></div>
+    <p>The chin is about <span class="num">0.03 mm</span> over the zone mark on average. Fewer than half of the heads are within it.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.78 mm</span><span class="w">FLAME alone 0.80 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.31 mm</span><span class="w">FLAME alone 1.32 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">21 of 57</span><span class="w">FLAME alone 18 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>p_joleeh</code> <span class="num">1.07</span>, <code>mod_kenobi</code> <span class="num">1.05</span>, <code>pmhc04</code> <span class="num">1.01</span>, in millimetres.</p>
+    <ul class="plain">
+      <li>On average our nose base to chin is <span class="num">0.45 mm</span> longer than KOTOR's. The typical head differs by <span class="num">0.66 mm</span>, in either direction. Our nose base to chin is larger on 39 of the 52 heads that have this measure.</li>
+    </ul>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The eye opening controls moved the number of heads within the mark from 18 to 21.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>FLAME's lower face comes out a little bigger than KOTOR's. Our chin lies lower than KOTOR's, measured from the base of the nose, as shown above.</li>
+        <li>The worst heads are Jolee, Kenobi and <code>pmhc04</code>.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>After step 4, learn new shapes from what FLAME leaves over on the KOTOR heads, and test them on heads they were not learned from.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{pic_chin}}" alt="The chin cut from the feature sheet, with KOTOR's head on the left and the FLAME fit on the right.">
+      <figcaption>Picture 6. Bastila's chin, with KOTOR's head on the left and our FLAME fit on the right. This sheet was made before the eye opening controls existed, so the eyes show the old fixed opening.</figcaption>
+    </figure>
+  </section>
+  <section class="zone" id="zone-jaw">
+    <div class="step-head"><h2>Jaw</h2><span class="pill part">Close</span></div>
+    <p>The jaw is about <span class="num">0.05 mm</span> over the zone mark on average. Fewer than half of the heads are within it.</p>
+    <div class="zstats">
+      <div><span class="k">Mean</span><span class="v">0.80 mm</span><span class="w">FLAME alone 0.81 mm</span></div>
+      <div><span class="k">95th percentile</span><span class="v">1.34 mm</span><span class="w">FLAME alone 1.37 mm</span></div>
+      <div><span class="k">Heads within 0.75 mm</span><span class="v">18 of 57</span><span class="w">FLAME alone 10 of 57</span></div>
+    </div>
+    <p>The three worst heads are <code>sith_app</code> <span class="num">1.09</span>, <code>n_zezkaiellh</code> <span class="num">1.06</span>, <code>pmhc04</code> <span class="num">1.04</span>, in millimetres.</p>
+    <ul class="plain">
+      <li>On average our jaw width is <span class="num">0.44 mm</span> longer than KOTOR's. The typical head differs by <span class="num">0.70 mm</span>, in either direction. Our jaw width is larger on 39 of the 51 heads that have this measure.</li>
+      <li>On average our face height is <span class="num">0.11 mm</span> longer than KOTOR's. The typical head differs by <span class="num">0.50 mm</span>, in either direction. Our face height is larger on 30 of the 51 heads that have this measure.</li>
+    </ul>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The eye opening controls moved the number of heads within the mark from 10 to 18.</li>
+        <li>Step 5 quotes an earlier fit, in which the jaw was <span class="num">0.8 mm</span> wider than KOTOR's. In this fit the jaw is <span class="num">0.44 mm</span> wider, and <span class="num">0.53 mm</span> wider with FLAME alone.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>The jaw is still the zone with one of the largest proportion differences. Its width differs by <span class="num">0.70 mm</span> for a typical head.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>After step 4, learn new shapes from what FLAME leaves over on the KOTOR heads, and test them on heads they were not learned from.</li>
+        <li>Check that each head lies closer to its own KOTOR head than to any other.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{pic_jaw}}" alt="The jaw cut from the feature sheet, with KOTOR's head on the left and the FLAME fit on the right.">
+      <figcaption>Picture 7. The player head <code>pmhc01</code>, with KOTOR's head on the left and our FLAME fit on the right. This sheet was made before the eye opening controls existed, so the eyes show the old fixed opening.</figcaption>
+    </figure>
+  </section>
+  <!--/ZONES-->
+
+  <section class="step" id="targets">
+    <div class="step-head"><h2><span>1</span>The KOTOR test heads</h2><span class="pill good">Done</span></div>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The games hold 194 face meshes, which come down to 48 distinct shapes. We use 45 game heads, plus Kreia and Bastila, plus 12 mod heads.</li>
+        <li>Our head is wrapped onto each KOTOR head. Hair, the mesh's open edges and the inside of the mouth are left out.</li>
+        <li>Our lid edge goes onto KOTOR's eye slit. On all 57 heads it lands within <span class="num">0.76 mm</span> of its place.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>On the mod head <code>mod_hp_pfha01</code> our lid edge ends up <span class="num">7.2 mm</span> from KOTOR's slit. The next worst head is <span class="num">2.1 mm</span> off, so this head's target may be faulty.</li>
+        <li>Kreia, <code>mod_hp_pfha01</code> and <code>mod_hp_pfhb02</code> have hair panels and no skull.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>Check the target of <code>mod_hp_pfha01</code>, then fix it or drop it.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="step" id="method">
+    <div class="step-head"><h2><span>2</span>A fit we can trust</h2><span class="pill good">Done</span></div>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>The fit is tested on heads that each slider set makes exactly. It finds FLAME's heads to <span class="num">0.013 mm</span>, our named controls' heads to <span class="num">0.000 mm</span> and MakeHuman's to <span class="num">0.024 mm</span>.</li>
+        <li>Since 19 November the target's size is held fixed. Before, the fit could shrink a target by up to 10% and use FLAME's size shapes instead. That left KOTOR's eye slit too small for our eyeball, which has a fixed size.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>Every fault found so far was in the targets or the method, not in the sliders. So a new measure must be checked on slider-made heads before its numbers are trusted.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>Run the slider-made head check on the new set with the eye opening controls.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="step" id="eyes">
+    <div class="step-head"><h2><span>3</span>Eye openings, blink and lashes</h2><span class="pill weak">Paused</span></div>
+    <p>This work is paused so the face can come first. The full state is written up in <code>docs/research/2026-11-19-eyelids-and-lashes.md</code> in the kjk repo.</p>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>Each eye has 26 new controls. They set the opening's width, its place sideways, and the height and depth of the lid edge at seven stops along the lids.</li>
+        <li>Our lid edge now lies <span class="num">0.87 mm</span> from KOTOR's slit on average, against <span class="num">5.85 mm</span> with FLAME alone. The opening's height is <span class="num">0.07 mm</span> off.</li>
+        <li>The blink is computed on each head from its own lid edges. All 57 heads close with less than <span class="num">1 mm</span> left between the lids, and no lid skin goes inside the eyeball.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>A closing lid shows the liner and lash paint taken from the open lid, so it looks smeared and dark.</li>
+        <li>The lash strip does not exist yet. Bastila's and Kreia's lower liner shows doubled, and Bastila's liner wing cannot be made.</li>
+        <li>The inner corner's depth controls hit their limit on up to 36 of the 57 heads.</li>
+        <li>A small dent shows above the outer corner when the eye closes.</li>
+      </ul></div>
+      <div><h3>Next, when this resumes</h3><ul>
+        <li>Paint the lid skin with plain skin from above the eye.</li>
+        <li>Build the lash strip. It is a thin strip on the lid edge that carries the lashes and the liner, with its own sliders outside FLAME.</li>
+        <li>Widen the ranges of the depth and sideways controls.</li>
+      </ul></div>
+    </div>
+    <figure>
+      <img src="{{blink}}" alt="Carth, Bastila and Kreia, each shown six times: KOTOR's head and ours, with the eyes open, half closed and closed.">
+      <figcaption>Picture 1. Carth, Bastila and Kreia blinking. In each row the tiles are A KOTOR open, B ours open, C KOTOR half closed, D ours half closed, E KOTOR closed and F ours closed. KOTOR closes its eyes with flat lid pieces, so only the shape and the timing of its blink are worth matching. Our closed lids show the smeared liner described above.</figcaption>
+    </figure>
+  </section>
+
+  <section class="step" id="cranium">
+    <div class="step-head"><h2><span>4</span>Holding the skull</h2><span class="pill wait">Now</span></div>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>A test holds our upper skull in a band just under KOTOR's outer surface, hair included.</li>
+        <li>On the older targets it brought FLAME's skull from <span class="num">2.42 mm</span> off to <span class="num">0.32 mm</span>. The face's score moved from <span class="num">0.68 mm</span> to <span class="num">0.74 mm</span>. On 47 of the 57 heads the face lost less than <span class="num">0.1 mm</span>.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>It is not part of the fit yet, and it has not run on the current targets.</li>
+        <li>A harder version, which held all unseen skin under KOTOR's surface, crumpled the necks. Only the soft version on the upper skull works.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>Merge it into the fit as an option, with a switch for each head.</li>
+        <li>Switch it off for Kreia and <code>mod_hp_pfhb02</code>, which have hair panels and no skull.</li>
+        <li>Run it on the 57 heads.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="step" id="face">
+    <div class="step-head"><h2><span>5</span>The face to the pass mark</h2><span class="pill wait">Now</span></div>
+    <div class="cols">
+      <div><h3>What is done</h3><ul>
+        <li>FLAME's 300 shapes alone bring the face to <span class="num">0.70 mm</span>. With the eye opening controls it is <span class="num">0.64 mm</span>. The average head, with no slider set, is about <span class="num">2.4 mm</span> off.</li>
+        <li>FLAME's lower face comes out a little bigger than KOTOR's. In the fit before the eye opening controls, its jaw was <span class="num">0.8 mm</span> wider and its face <span class="num">0.7 mm</span> longer from brow to chin. With them the jaw is <span class="num">0.44 mm</span> wider, and the face height is only <span class="num">0.11 mm</span> off.</li>
+        <li>100 smooth shapes that know nothing about faces do no better than FLAME. So FLAME is not simply short of freedom.</li>
+      </ul></div>
+      <div><h3>What we still dislike</h3><ul>
+        <li>No head passes the mark.</li>
+        <li>The forehead is the worst zone at <span class="num">1.08 mm</span>, partly because of hair.</li>
+        <li>The brows, the chin and the jaw are each about <span class="num">0.8 mm</span> off.</li>
+      </ul></div>
+      <div><h3>Next</h3><ul>
+        <li>After step 4, learn new shapes from what FLAME leaves over on the KOTOR heads, which is about <span class="num">0.6 mm</span>. Test each learned shape on heads it was not learned from.</li>
+        <li>Check that each head lies closer to its own KOTOR head than to any other.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section class="step" id="sheet">
+    <div class="step-head"><h2><span>6</span>A feature sheet for you to judge</h2><span class="pill none">Not yet</span></div>
+    <p>A new sheet of ten heads, with our head wearing each character's KOTOR texture. It is cut feature by feature: brows and eyes, nose, mouth, chin and jaw, and the whole face from the front and at three quarters. It comes before any learned shape is kept.</p>
+  </section>
+
+  <section class="step" id="engine">
+    <div class="step-head"><h2><span>7</span>The proof in the engine</h2><span class="pill none">Not yet</span></div>
+    <p>First we find out whether kjk can load a replacement head model. Then our fitted head is exported as a KOTOR model with the nodes the rig needs, wearing the character's own texture. It is shown in kjk next to the original head. This is where you judge likeness.</p>
+  </section>
+
+  <section class="step" id="sliders">
+    <div class="step-head"><h2><span>8</span>From fits to sliders</h2><span class="pill none">Not yet</span></div>
+    <p>Each control's range comes from the values the 57 fits use, and the player's sliders stop at those ends. Anything that breaks beyond them is fixed or cut at that point. The plans for using fewer vertices and for naming the sliders are written in <code>docs/research/2026-11-17-head-parts-and-controls.md</code>. This step also decides how the game gets the closed eye: computed in the engine, or carried by the sliders.</p>
+  </section>
+
+  <section class="step" id="editor">
+    <div class="step-head"><h2><span>9</span>The character editor</h2><span class="pill none">Not yet</span></div>
+    <p>The sliders go into kjk's character creation, in KOTOR's style. The lash strip brings its own sliders for the lashes and the liner.</p>
+  </section>
+
+  <footer>
+    <p>The numbers come from <code>kotor_fit_v6.json</code> and <code>close_v6.json</code> in the likeness-fit data folder, made on 19 November 2026. The older version of this page judged photos against 15 heads of known shape. It was replaced on the same day, because 3D KOTOR heads are now the only test.</p>
+  </footer>
+</div>
