@@ -3,12 +3,15 @@
 //! test `gui_layouts` runs.
 
 pub mod assets;
+pub mod catalogue;
 pub mod draw;
 pub mod edit;
 pub mod feedback;
+pub mod hud_layer;
 pub mod icons;
 pub mod input;
 pub mod intent;
+pub mod over_play;
 pub mod paint;
 #[cfg(feature = "probes")]
 pub mod probes;

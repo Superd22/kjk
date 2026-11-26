@@ -1,6 +1,7 @@
 # The game's screens (`ui`, `game::ui_view`)
 
 KOTOR's own `.gui` layouts, drawn by our GUI runtime over the live world.
+[`UI-GUIDELINES.md`](UI-GUIDELINES.md) holds the principles and the numbered rules every screen is held to.
 - **`fmt_odyssey::gui`** reads a layout; **`asset_odyssey::font`** a TXI
   bitmap font. Child extents are relative to the root; the frame is
   640 × 480 unless the root reaches past it (`mainmenu16x12`, `mipc28x6`).
@@ -669,7 +670,9 @@ Running and checking:
   offers Security too (below). The host's answer is the feedback log's,
   in the game's own lines. `kjk play --skill security=N` gives the
   players N ranks.
-- Console verbs: `ui open <screen>`, `ui show <layout>`, `ui press <TAG>`,
+- Console verbs: `ui open <screen>`, `ui show <layout>`, `ui capture NAME`
+  (the view model of that moment as a capture of play; "Captures of play"
+  below), `ui press <TAG>`,
   `ui nav up|down|left|right|activate`, `ui type <text>`, `ui back`,
   `ui close`, `ui security [spike]`, `ui use TAG open|close|talk|use` (a
   Use of the nearest object so tagged), `ui wear TEMPLATE` and `ui unwear
@@ -711,6 +714,147 @@ Running and checking:
 - `kjk gui probes` runs the checks the approved test `gui_layouts` asserts.
   `kjk gui render k1 <layout>` draws one layout; `kjk gui sweep` paints
   every layout of each install; `kjk gui sheet` makes a contact sheet.
+- **Control trees.** `kjk gui screen` writes a control tree next to its
+  PNG, a JSON file of the same name. `kjk gui sweep --out DIR` draws every
+  layout at rest at its own size into `DIR/<game>/`, a PNG and a control
+  tree each. A tree holds no pixels, so it can be committed where the
+  picture cannot. The same state gives the same PNG and the same tree,
+  byte for byte. Agents read the tree instead of guessing from the
+  picture, and the UI lint (docs/UI-GUIDELINES.md) checks it. Format 1:
+  - `shown`: the game, and the screen and its steps (or the layout, from
+    the sweep). `window`: the picture's size in pixels.
+  - `focus`: the top screen's focused control. `back`: what Back does
+    there, the screens open after it (top last) and the intents it
+    raised. It is null in the sweep.
+  - `layers`: each open screen, bottom first, with its `screen`, its
+    `layout`, its `scale` (window pixels to a layout pixel) and its
+    `controls`, in paint order. A hidden control is not listed.
+  - A control: `tag`, `id` (-1 for the layout's root), `kind`, `rect` (left,
+    top, width, height in window pixels), `focused`, `disabled`, `strref`
+    (the talk-table entry its words come from, if any), `focusable` and
+    `moves`. `moves` gives the control that up, down, left and right lead
+    to, as the stack moves the focus (`MOVETO`, else the nearest control
+    that way). Only the top screen's controls that can take focus have
+    them. A list box takes up and down itself row by row before its
+    `moves` apply.
+  - `words`: each block of words the control set (one for each row of a
+    list), with its `text`, `font`, `rect`, `color` (RGBA as drawn, the
+    focus's pulse in its alpha) and `background`. `background` is the
+    darkest and the lightest colour behind the words, read from the
+    picture drawn without any words. `body_height` is the font's body
+    height in window pixels: the rows from the top of its tallest letter
+    to the bottom of its lowest one (the digits and the letters A to Z,
+    both cases), drawn by the renderer on a line that starts on a whole
+    pixel, a pixel counting from half its alpha. This is the measure
+    docs/UI-GUIDELINES.md uses.
+- **UI catalogue** (`ui::catalogue`). Every module of `ui::screens` has a
+  story file of its own name in `data/ui/stories`, and the approved test
+  `ui_catalogue` fails when one is missing. A file gives the module's
+  status in the audit (`not started`, `needs work` or `audited`), its
+  notes, and its stories. A story is a named state of a screen: its
+  `name`, the `screen` as `screens::open` names it, the `steps` that
+  `kjk gui screen --step` takes, the `games` it is drawn on (both by
+  default) and, for the message screen, an `error`. A story may also start
+  from a capture of play instead of stand-ins (below). Every module has at
+  least one story. A module that is only a part of other screens (the
+  companion places, the filter, the tab and the menu bar) has stories that
+  open the screens drawing it. Each story is drawn at the six sizes of docs/UI-GUIDELINES.md
+  (`catalogue::SIZES`: `deck`, `1080p`, `4k-tv`, `4k-monitor` at a scale
+  factor of 2, `4x3`, `ultrawide`) and with two inputs (`pad`, its hints
+  shown, the Steam Deck's buttons on `deck`; `mouse`). The screens step in
+  the logical window and are drawn at the physical size, as in play, so
+  `4k-monitor` draws as `4k-tv` does: the screens keep their size at any
+  desktop scaling. `kjk gui list [--json]` lists the modules, their
+  statuses and stories, and the sizes and inputs. `kjk gui show MODULE`
+  gives a module's notes and its stories' steps. `kjk gui story MODULE
+  [STORY] [--at SIZE] [--input pad|mouse] [--game k1|tsl]` draws stories,
+  a PNG and a control tree each, into
+  `kjk-artifacts/gui/catalogue/<game>/<module>/<story>/<size>-<input>.png`.
+  The steps a story takes and the stand-in view models live in
+  `kjk_game::story_stage`, so that the in-game catalogue can stage
+  stories as the shell does.
+- **Captures of play** (`ui::catalogue::Capture`, `data/ui/captures`). A
+  capture is the UI's view model at one moment of a real run, written as
+  JSON with the window it was drawn in. It holds numbers, the names of
+  textures and kjk's own words, but no game art and no text of the game's,
+  so it can be committed (AGENT.md forbids committing the game's files and
+  dumps of them). Each of the game's words, such as a creature's or a
+  power's name, is written as its line in the install's talk table
+  (`{"$talk": 1234}`), and read back from the install when a story is
+  drawn (`ui::catalogue::TalkTable`). A line shown with its braces taken
+  out says `"unbraced": true`. The text fields `area` and `name` of a
+  save's summary say `"text": true`. A run of bytes is swapped only when
+  it has three bytes or more and a letter among them, so pairs of numbers
+  such as a character's health stay as they are. The settings are written
+  as they are. A capture also holds the key bindings of the run. The list
+  of saves on disk is left out, because it names the player's own saves.
+  - **Taking one.** The console command `ui capture NAME` writes the view
+    model of that moment to `data/ui/captures/NAME.json` in the checkout
+    the game was built from. A name is letters, digits, `-` and `_`. It
+    works in a `--cmds` script and in a headless run. Run such a script
+    with `KJK_SETTINGS` naming a copy of the settings file, so that its
+    `ui set` commands do not change the player's own settings. The game
+    fills the action bar and the key hints for the input in use, so a
+    story drawn with both inputs needs two captures of the same moment:
+    one taken with the mouse and one taken after `ui pad xbox`. For
+    example, the captures of the HUD's and the wheel's stories were taken
+    with `kjk play --stage 301nar --class jedi --power 9 --power 21
+    --power 26 --force-points 3 --item g_i_medeqpmnt01=3 --item
+    g_w_fraggren01=2 --hostile exchangethug2 --size 1920x1080 --headless
+    --cmds 'wait world; wait 40f; ui target exchangethug2; wait 30f; ui
+    powerwheel hold; wait 30f; ui capture nar-shaddaa-low-force; quit'`,
+    and again with `ui pad xbox` after `wait world` and the name
+    `nar-shaddaa-low-force-pad`.
+  - **A story from a capture.** A story is one situation, such as a
+    hostile target held, and names a capture of it in each game it is
+    drawn on: `capture = { k1 = "taris-lower-city-target", tsl =
+    "nar-shaddaa-target" }` for the mouse, and `pad_capture` the same way
+    for a pad. A story with captures is drawn on both games unless its
+    `games` says otherwise, so the catalogue shows the situation in each
+    game's own look. A capture records the game it was taken in. Its view model is
+    then the capture's, and none of the stand-ins is added. A story with a
+    `capture` and no `pad_capture` is drawn with the mouse alone. The
+    `pad KIND` step renames the pad glyphs a capture holds
+    (`kjkpad_<kind>_<chord>`) for that pad, so a capture taken with an Xbox
+    pad shows the Steam Deck's buttons at the `deck` size. The story then
+    takes its own steps on top, such as `set display.target_top false`.
+  - **What is drawn over play.** The screen `play` (`catalogue::PLAY`)
+    draws everything that stands over play besides the screens of the
+    stack, over a plain background (`ui::over_play::OverPlay::still`). It
+    draws them in the order a frame of play stacks them. First come
+    KOTOR's HUD and its floating target block, the words floating over
+    creatures, the area transition panel, the power wheel and the arena's
+    line and panel. Then come a terminal's camera feed, a bark, the
+    status summaries, the conversation, the host's request card and the
+    banner. A conversation hides the HUD and what stands with it, barks
+    and the summaries, as in play. The game draws the same layers each
+    frame through the same `ui::over_play::OverPlay`, so a story shows
+    what play shows. A minigame and a fade also hide the HUD in play, but
+    a capture does not record them. Its stories start from a capture. The
+    step `feed on` turns a terminal's camera feed on, as the game does
+    while a computer conversation shows a camera. The wheel takes three
+    steps of its own. `wheel at N` highlights entry N, counting from 0.
+    `wheel pick NAME` highlights the first entry whose name holds NAME,
+    such as `wheel pick Stun`. `wheel close` shuts the wheel. The pointer
+    goes to the highlighted entry, and the arc of the entry highlighted
+    before goes away, because only the game knows an entry's arc.
+  - **The check.** The approved test `ui_catalogue` fails when a capture a
+    story names is missing, does not read, reads otherwise once written
+    again, was taken in another game than the story is drawn on, or was
+    taken with the wrong input. A story with captures must name one for each
+    game it is drawn on, with each input, and must open its screen on its
+    capture. It needs no game data, so it
+    reads each line of the talk table as stand-in words (`talk 1234`,
+    `ui::catalogue::StandInTalk`).
+- **Design tokens** (`data/ui/tokens.json`, the W3C Design Tokens format
+  2025.10). They hold the screens' palettes, which are the source of the
+  colours in the code (the probe `palette_tokens` fails when a palette
+  differs), KOTOR's bitmap fonts by their use (`com.kjk.bitmapFont` holds
+  the texture), and the smallest body heights of docs/UI-GUIDELINES.md.
+  `kjk gui census` counts what the layouts of each install use into
+  `data/ui/census.json`: the layouts, the controls of each kind, and the
+  controls that use each font, text colour and border texture. It is the
+  "before" the tokens are measured against.
 - Settings live in the user's config folder (`KJK_SETTINGS` overrides it).
 - The options (`ui::screens::options`, a table per page): gameplay's
   inverted camera and its Camera page (ours, on TSL's unused second

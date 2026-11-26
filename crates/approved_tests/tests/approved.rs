@@ -3857,6 +3857,129 @@ fn conversation(discovery: &vfs::Discovery, module: &str, seconds: u64) -> Vec<S
 /// were added the same day. A disabled icon is drawn faded and grey on the
 /// HUD's bar and on the wheel. On the setup page, only a hidden power's icon
 /// is grey. Dimmed list rows on other screens are only faded, as before.
+/// The checks `tree_marks`, `tree_focus_links` and `palette_tokens` were
+/// added on 2026-11-26, with the control trees of `kjk gui screen` and the
+/// design tokens. A painter asked for marks leaves one for each control,
+/// where it was drawn and with the words it set, and draws nothing
+/// differently. The focus moves along a `MOVETO` link, else to the nearest
+/// control that way. Every palette in the code has the colours of
+/// `data/ui/tokens.json`.
+/// The UI catalogue (docs/UI.md, "UI catalogue"), approved by the owner on
+/// 2026-11-26. Every module of `ui::screens` has a story file in
+/// `data/ui/stories`, and every story file is a module's. Each file reads,
+/// with a known status, and each story opens its screen on an empty
+/// view-model or on its capture, or names the screen over play
+/// (`ui::catalogue::PLAY`). Each
+/// capture of play a story names is in `data/ui/captures`, reads, reads the
+/// same once written again, was taken in the game it is named for, and was
+/// taken with its input: the mouse for `capture`, a pad for `pad_capture`.
+/// A story with captures has one for each game it is drawn on (both by
+/// default), with each input. It needs no game data: the lines of
+/// the talk table a capture names are read as stand-in words.
+#[test]
+fn ui_catalogue() {
+    use std::collections::BTreeSet;
+    let screens = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../ui/src/screens");
+    let modules: BTreeSet<String> = std::fs::read_dir(&screens)
+        .expect("the screens folder reads")
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            name.strip_suffix(".rs")
+                .filter(|module| *module != "mod")
+                .map(str::to_string)
+        })
+        .collect();
+    let files = ui::catalogue::read_all(&ui::catalogue::folder()).expect("the story files read");
+    let covered: BTreeSet<String> = files.iter().map(|file| file.module.clone()).collect();
+    let missing: Vec<&String> = modules.difference(&covered).collect();
+    let stray: Vec<&String> = covered.difference(&modules).collect();
+    assert!(
+        missing.is_empty(),
+        "screen modules with no story file: {missing:?}"
+    );
+    assert!(
+        stray.is_empty(),
+        "story files of no screen module: {stray:?}"
+    );
+    let empty = ui::vm::ViewModel::default();
+    let mut unopened = Vec::new();
+    for file in &files {
+        for story in &file.stories {
+            let captured = (story.capture.values().next())
+                .and_then(|name| {
+                    ui::catalogue::read_capture(
+                        &ui::catalogue::captures(),
+                        name,
+                        &ui::catalogue::StandInTalk,
+                    )
+                    .ok()
+                })
+                .map(|capture| capture.view);
+            let view = captured.as_ref().unwrap_or(&empty);
+            if story.screen != ui::catalogue::PLAY
+                && ui::screens::open(&story.screen, view).is_none()
+            {
+                unopened.push(format!(
+                    "{}: {} ({})",
+                    file.module, story.name, story.screen
+                ));
+            }
+        }
+    }
+    assert!(
+        unopened.is_empty(),
+        "stories whose screen does not open: {unopened:?}"
+    );
+    let mut bad_captures = Vec::new();
+    for file in &files {
+        for story in &file.stories {
+            let captured = !story.capture.is_empty() || !story.pad_capture.is_empty();
+            for game in story.games.iter().filter(|_| captured) {
+                for (captures, pad) in [(&story.capture, false), (&story.pad_capture, true)] {
+                    let input = if pad { "a pad" } else { "the mouse" };
+                    let Some(name) = captures.get(game) else {
+                        bad_captures.push(format!(
+                            "{}: {}: no capture on {game} with {input}",
+                            file.module, story.name
+                        ));
+                        continue;
+                    };
+                    let folder = ui::catalogue::captures();
+                    let talk = ui::catalogue::StandInTalk;
+                    let why = match ui::catalogue::read_capture(&folder, name, &talk) {
+                        Err(why) => Some(why),
+                        Ok(capture) if capture.game != *game => {
+                            Some(format!("taken in {}, named for {game}", capture.game))
+                        }
+                        Ok(capture) if capture.view.pad_playing != pad => Some(format!(
+                            "taken with the {}",
+                            if pad { "mouse" } else { "pad" }
+                        )),
+                        Ok(capture) => {
+                            let again = capture
+                                .text(&talk)
+                                .and_then(|text| ui::catalogue::Capture::read(&text, &talk));
+                            (again.as_ref() != Ok(&capture))
+                                .then(|| "reads otherwise once written".to_string())
+                        }
+                    };
+                    if let Some(why) = why {
+                        bad_captures
+                            .push(format!("{}: {}: {name}: {why}", file.module, story.name));
+                    }
+                }
+            }
+        }
+    }
+    assert!(bad_captures.is_empty(), "captures: {bad_captures:?}");
+    println!(
+        "{} modules, {} stories",
+        files.len(),
+        files.iter().map(|file| file.stories.len()).sum::<usize>()
+    );
+}
+
 #[test]
 fn gui_layouts() {
     let checks = ui::probes::all();
